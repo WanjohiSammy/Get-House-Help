@@ -1,0 +1,11 @@
+{
+  "name": "jirani",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx wrangler pages dev",
+    "db:init:local": "npx wrangler d1 execute jirani --local --file=schema.sql",
+    "db:init": "npx wrangler d1 execute jirani --remote --file=schema.sql",
+    "deploy": "npx wrangler pages deploy"
+  }
+}

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2D2A7A">
+<meta name="robots" content="noindex">
+<title>Your shortlist — Jirani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="topbar">
+    <a class="icon-btn" href="/" aria-label="Home" id="back"></a>
+    <div>
+      <h1 id="title">Your shortlist</h1>
+      <div class="small" id="subtitle"></div>
+    </div>
+  </div>
+  <div id="status"></div>
+  <div class="stack section" id="list"><div class="empty"><span class="spinner" style="margin:0 auto"></span></div></div>
+  <div class="spacer"></div>
+  <div id="cta"></div>
+</main>
+<script type="module">
+  import { api, getConfig, esc, label, money, initials, avatarClass, icons, param, rememberRequest, whatsappLink, $ } from '/app.js';
+  $('#back').innerHTML = icons.back;
+  const rid = param('r');
+  let timer;
+
+  const star = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="#E59400"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>';
+
+  function card(h, i, unlocked, cfg) {
+    const pill = h.badge === 'Certified' ? 'pill strong' : h.badge === 'Checked' ? 'pill' : 'pill grey';
+    const commute = h.commuteMin ? `${h.commuteMin} min · ${esc(h.area)}` : esc(h.area);
+    const contact = unlocked ? `
+      <div class="contact">
+        <a class="btn small" href="tel:+${esc(h.phoneIntl)}">${icons.phone} ${esc(h.phone)}</a>
+        <a class="btn small ghost" href="${whatsappLink(h.phoneIntl, 'Habari ' + h.name.split(' ')[0] + ', nimepata nambari yako kupitia Jirani.')}" target="_blank" rel="noopener">${icons.chat} WhatsApp</a>
+      </div>` : '';
+    return `
+      <div class="card ${i === 0 ? 'help-card top' : 'help-card'}">
+        <a href="/help.html?id=${encodeURIComponent(h.id)}&r=${encodeURIComponent(rid)}" style="color:inherit; display:block">
+          <div class="row">
+            <span class="avatar ${avatarClass(h.id)}">${esc(initials(h.name))}</span>
+            <span style="flex:1; display:flex; flex-direction:column; gap:2px">
+              <strong style="font-size:17px">${esc(h.name)}</strong>
+              <span class="small">${h.kinds.map(label).join(' · ')}</span>
+            </span>
+            <span class="${pill}">${esc(h.badge)}</span>
+          </div>
+          <div class="facts">
+            <span>${icons.pin} ${commute}</span>
+            <span>${icons.bag} ${h.years} yrs experience</span>
+            <span>${h.tasks.slice(0, 3).map(label).join(', ') || '—'}</span>
+            <span style="font-weight:700">${h.salary ? money(h.salary) + '/mo' : 'Salary to agree'}</span>
+          </div>
+        </a>
+        ${contact}
+      </div>`;
+  }
+
+  async function load() {
+    if (!rid) { $('#list').innerHTML = '<div class="empty">This link is incomplete. <a href="/request.html">Start a new search</a>.</div>'; return; }
+    let data, cfg;
+    try { [data, cfg] = await Promise.all([api(`/api/requests/${encodeURIComponent(rid)}`), getConfig()]); }
+    catch (e) { $('#list').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+    rememberRequest(rid);
+
+    const { request: r, helps, unlocked } = data;
+    $('#subtitle').textContent = `${label(r.kind)} · ${r.area}`;
+    $('#title').textContent = unlocked ? 'Call your matches' : helps.length ? 'Your shortlist is ready' : 'Your shortlist';
+
+    // Status banners
+    let banner = '';
+    if (r.status === 'pending_review') banner = `<div class="banner soft section" style="align-items:center"><span class="spinner"></span><div><strong>Confirming your payment</strong><span style="font-size:13px">Usually within an hour. This page updates by itself.</span></div></div>`;
+    if (r.status === 'awaiting_payment') banner = `<div class="banner soft section" style="align-items:center"><span class="spinner"></span><div><strong>Check your phone</strong><span style="font-size:13px">Enter your M-Pesa PIN to confirm.</span></div></div>`;
+    if (unlocked) banner = `<div class="banner cream section"><div><strong>Call them to set up interviews</strong><span style="font-size:13px">If you hire, pay ${money(cfg.successFee)} to Till ${esc(cfg.till || '—')}. That includes a free replacement for 30 days.</span></div></div>`;
+    $('#status').innerHTML = banner;
+
+    if (!helps.length) {
+      $('#list').innerHTML = `<div class="card empty">We don't have checked helps near ${esc(r.area)} yet. We'll find some and SMS you within 2 days.
+        ${cfg.whatsapp ? `<p><a class="btn ghost" href="${whatsappLink(cfg.whatsapp, 'Hi, my Jirani request is ' + rid)}">${icons.chat} Message us</a></p>` : ''}</div>`;
+      $('#cta').innerHTML = '';
+      return;
+    }
+
+    $('#list').innerHTML = helps.map((h, i) => card(h, i, unlocked, cfg)).join('');
+    $('#cta').innerHTML = unlocked || r.status === 'pending_review' || r.status === 'awaiting_payment' ? '' : `
+      <div class="sticky-cta">
+        <a class="btn" href="/pay.html?r=${encodeURIComponent(rid)}">Get their numbers · ${money(cfg.matchFee)}</a>
+        <p class="small center" style="margin:8px 0 0">One payment for all ${helps.length}. Paid by M-Pesa.</p>
+      </div>`;
+
+    clearTimeout(timer);
+    if (r.status === 'pending_review' || r.status === 'awaiting_payment') timer = setTimeout(load, 5000);
+  }
+  load();
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2D2A7A">
+<meta name="description" content="Find a checked house help who lives near you in Nairobi. No sign-up, pay with M-Pesa.">
+<title>Jirani — trusted house help from next door</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="topbar" style="margin-left:0; justify-content: space-between">
+    <a class="brand" href="/"><span class="brand-mark" id="mark"></span>Jirani</a>
+  </div>
+
+  <h1 class="hero">Find a house help<br>you can trust</h1>
+  <p class="lead">Trusted help from next door. Checked helps who live near you, no sign-up needed.</p>
+
+  <div id="mine"></div>
+
+  <div class="stack section">
+    <a class="card option" href="/request.html?kind=live-in">
+      <span class="tile"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><circle cx="12" cy="14" r="2"/></svg></span>
+      <span class="grow"><strong>Live-in help</strong><span class="small">Stays with your family</span></span>
+      <span class="chev"></span>
+    </a>
+    <a class="card option" href="/request.html?kind=live-out">
+      <span class="tile"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>
+      <span class="grow"><strong>Live-out help</strong><span class="small">Comes daily, lives nearby</span></span>
+      <span class="chev"></span>
+    </a>
+    <a class="card option" href="/request.html?kind=day">
+      <span class="tile"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span>
+      <span class="grow"><strong>Day help</strong><span class="small">Cleaning or laundry, by the day</span></span>
+      <span class="chev"></span>
+    </a>
+  </div>
+
+  <div class="banner gold section">
+    <span id="shield"></span>
+    <div><strong>Free replacement for 30 days</strong><span style="font-size:13px">If it doesn't work out, we find you someone new at no cost.</span></div>
+  </div>
+
+  <div class="spacer"></div>
+  <div class="stack section center">
+    <a class="btn ghost" id="chat" href="#"><span id="chat-ic"></span>Rather chat? Message us</a>
+    <a class="link-btn" style="justify-content:center" href="/join.html">Looking for work? Join as a help</a>
+  </div>
+</main>
+<script type="module">
+  import { icons, getConfig, whatsappLink, rememberedRequests, $ } from '/app.js';
+  $('#mark').innerHTML = icons.home;
+  $('#shield').innerHTML = icons.shield;
+  $('#chat-ic').innerHTML = icons.chat;
+  document.querySelectorAll('.chev').forEach(el => { el.innerHTML = icons.chevron; el.style.color = '#5E5B6E'; });
+
+  const mine = rememberedRequests();
+  if (mine.length) {
+    $('#mine').innerHTML = `<a class="banner soft section" href="/shortlist.html?r=${encodeURIComponent(mine[0])}" style="align-items:center">
+      <span style="flex:1"><strong>Your shortlist</strong><span style="font-size:13px">Pick up where you left off</span></span>${icons.chevron}</a>`;
+  }
+  getConfig().then(c => {
+    if (c.whatsapp) $('#chat').href = whatsappLink(c.whatsapp, 'Hi Jirani, I need a house help.');
+    else $('#chat').hidden = true;
+  }).catch(() => { $('#chat').hidden = true; });
+</script>
+</body>
+</html>

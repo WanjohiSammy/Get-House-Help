@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin — Jirani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .help-admin textarea { min-height: 72px; font-size: 14px; }
+  .help-admin .input { min-height: 44px; font-size: 14px; padding: 8px 12px; }
+  .toggles { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .toggles label { display: flex; align-items: center; gap: 6px; font-size: 13px; min-height: 36px; }
+  .toggles input { width: 18px; height: 18px; accent-color: var(--indigo); }
+  .meta { font-size: 12px; color: var(--muted); }
+  .saved { color: var(--green); font-weight: 700; font-size: 13px; }
+</style>
+</head>
+<body>
+<main class="page wide">
+  <div class="topbar" style="margin-left:0; justify-content:space-between">
+    <a class="brand" href="/"><span class="brand-mark" id="mark"></span>Jirani admin</a>
+    <button class="link-btn" id="logout" hidden>Log out</button>
+  </div>
+
+  <form id="login" class="card section" style="max-width:420px">
+    <label class="label" for="token">Admin token</label>
+    <input class="input" id="token" type="password" autocomplete="current-password" required>
+    <p class="error-text" id="login-error" role="alert" hidden></p>
+    <button class="btn section" type="submit">Open admin</button>
+  </form>
+
+  <div id="app" hidden>
+    <div class="tabs" role="group" aria-label="Sections">
+      <button data-tab="pending" aria-pressed="true">To vet</button>
+      <button data-tab="approved" aria-pressed="false">Approved</button>
+      <button data-tab="requests" aria-pressed="false">Requests</button>
+      <button data-tab="add" aria-pressed="false">Add a help</button>
+      <button data-tab="other" aria-pressed="false">Rejected / away</button>
+    </div>
+    <div id="view"></div>
+  </div>
+</main>
+<script type="module">
+  import { api, getConfig, esc, label, money, icons, whatsappLink, CHECK_LABELS, $ } from '/app.js';
+  $('#mark').innerHTML = icons.home;
+  let token = sessionStorage.getItem('jirani.admin') || '';
+  let tab = 'pending';
+  let cfg;
+  const call = (path, opts = {}) => api(path, { ...opts, token });
+
+  async function start() {
+    try {
+      await call('/api/admin/helps?status=pending');
+      cfg = await getConfig();
+      sessionStorage.setItem('jirani.admin', token);
+      $('#login').hidden = true; $('#app').hidden = false; $('#logout').hidden = false;
+      render();
+    } catch (e) {
+      $('#login-error').textContent = e.status === 401 ? 'Wrong token.' : e.message;
+      $('#login-error').hidden = !token;
+    }
+  }
+  $('#login').addEventListener('submit', e => { e.preventDefault(); token = $('#token').value.trim(); start(); });
+  $('#logout').addEventListener('click', () => { sessionStorage.removeItem('jirani.admin'); location.reload(); });
+  document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => {
+    tab = b.dataset.tab;
+    document.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    render();
+  }));
+
+  const checkboxes = (name, options, selected) => options.map(o =>
+    `<label><input type="checkbox" name="${name}" value="${o}" ${selected.includes(o) ? 'checked' : ''}>${esc(label(o))}</label>`).join('');
+  const areaOptions = sel => cfg.areas.map(a => `<option ${a === sel ? 'selected' : ''}>${esc(a)}</option>`).join('');
+  const tel = p => p ? `<a href="tel:+${esc(p)}">0${esc(p.slice(3))}</a> · <a href="${whatsappLink(p)}" target="_blank" rel="noopener">WhatsApp</a>` : '—';
+
+  function helpCard(h) {
+    const kinds = h.kinds.split(',').filter(Boolean), tasks = h.tasks.split(',').filter(Boolean);
+    return `<form class="card help-admin" data-id="${esc(h.id)}">
+      <div class="row" style="justify-content:space-between; align-items:flex-start">
+        <div><strong style="font-size:17px">${esc(h.name)}</strong><div class="meta">Joined ${esc(h.created_at.slice(0, 10))} · ${esc(h.badge)}</div></div>
+        <select class="input" name="status" style="width:auto">
+          ${['pending', 'approved', 'rejected', 'unavailable'].map(s => `<option ${s === h.status ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <dl class="kv section" style="margin-top:12px">
+        <dt>Phone</dt><dd>${tel(h.phone)}</dd>
+        <dt>Area</dt><dd><select class="input" name="area">${areaOptions(h.area)}</select></dd>
+        <dt>Reference 1</dt><dd>${esc(h.ref1_name || '—')} ${h.ref1_phone ? '· ' + tel(h.ref1_phone) : ''}</dd>
+        <dt>Reference 2</dt><dd>${esc(h.ref2_name || '—')} ${h.ref2_phone ? '· ' + tel(h.ref2_phone) : ''}</dd>
+      </dl>
+      <p class="kicker section" style="margin-bottom:4px">Work</p>
+      <div class="toggles">${checkboxes('kinds', cfg.kinds, kinds)}</div>
+      <div class="toggles">${checkboxes('tasks', cfg.tasks, tasks)}</div>
+      <div class="grid2" style="grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px">
+        <label class="meta">Years<input class="input" name="years" type="number" value="${esc(h.years)}"></label>
+        <label class="meta">Salary KES<input class="input" name="salary" type="number" step="500" value="${esc(h.salary ?? '')}"></label>
+        <label class="meta">Languages<input class="input" name="languages" value="${esc(h.languages)}"></label>
+      </div>
+      <p class="kicker section" style="margin-bottom:4px">Checks done</p>
+      <div class="toggles">${Object.entries(CHECK_LABELS).map(([k, t]) =>
+        `<label><input type="checkbox" name="${k}" ${h[k] ? 'checked' : ''}>${esc(t)}</label>`).join('')}</div>
+      <label class="meta section" style="display:block">Public "About" (households see this)
+        <textarea class="input" name="about" maxlength="800">${esc(h.about)}</textarea></label>
+      <label class="meta" style="display:block; margin-top:8px">Private notes (only you see this)
+        <textarea class="input" name="admin_notes">${esc(h.admin_notes)}</textarea></label>
+      <div class="row section"><button class="btn small" type="submit">Save</button><span class="saved" hidden>Saved</span><span class="error-text" style="margin:0" hidden></span></div>
+    </form>`;
+  }
+
+  function formToHelp(form) {
+    const all = n => [...form.querySelectorAll(`input[name="${n}"]:checked`)].map(i => i.value);
+    const body = {
+      status: form.status?.value, area: form.area.value, kinds: all('kinds'), tasks: all('tasks'),
+      years: form.years.value, salary: form.salary.value, languages: form.languages.value,
+      about: form.about.value, admin_notes: form.admin_notes?.value
+    };
+    for (const k of Object.keys(CHECK_LABELS)) if (form[k]) body[k] = form[k].checked;
+    return body;
+  }
+
+  async function renderHelps(statuses) {
+    const lists = await Promise.all(statuses.map(s => call(`/api/admin/helps?status=${s}`)));
+    const helps = lists.flatMap(l => l.helps);
+    $('#view').innerHTML = helps.length
+      ? `<div class="grid2">${helps.map(helpCard).join('')}</div>`
+      : '<div class="card empty">Nobody here yet.</div>';
+    $('#view').querySelectorAll('form[data-id]').forEach(form => form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const ok = form.querySelector('.saved'), bad = form.querySelector('.error-text');
+      ok.hidden = bad.hidden = true;
+      try {
+        await call('/api/admin/helps', { method: 'POST', body: { id: form.dataset.id, ...formToHelp(form) } });
+        ok.hidden = false; setTimeout(() => { ok.hidden = true; }, 2500);
+      } catch (ex) { bad.textContent = ex.message; bad.hidden = false; }
+    }));
+  }
+
+  const STATUS_PILL = { open: 'pill grey', awaiting_payment: 'pill gold', pending_review: 'pill gold', paid: 'pill strong', hired: 'pill strong', closed: 'pill grey' };
+
+  async function renderRequests() {
+    const [{ requests }, { helps }] = await Promise.all([call('/api/admin/requests'), call('/api/admin/helps')]);
+    const names = new Map(helps.map(h => [h.id, h.name]));
+    $('#view').innerHTML = requests.length ? `<div class="grid2">${requests.map(r => `
+      <div class="card" data-id="${esc(r.id)}">
+        <div class="row" style="justify-content:space-between">
+          <strong>${esc(label(r.kind))} · ${esc(r.area)}</strong><span class="${STATUS_PILL[r.status] || 'pill'}">${esc(r.status.replace('_', ' '))}</span>
+        </div>
+        <dl class="kv" style="margin-top:10px">
+          <dt>Created</dt><dd>${esc(r.created_at.slice(0, 16).replace('T', ' '))}</dd>
+          <dt>Needs</dt><dd>${esc(r.tasks.split(',').filter(Boolean).map(label).join(', ') || '—')} · ${esc(r.start || '')}</dd>
+          ${r.notes ? `<dt>Notes</dt><dd>${esc(r.notes)}</dd>` : ''}
+          <dt>Phone</dt><dd>${r.phone ? tel(r.phone) : '—'}</dd>
+          <dt>M-Pesa</dt><dd>${esc(r.mpesa_code || '—')} ${r.amount ? '· ' + money(r.amount) : ''}</dd>
+          <dt>Shortlist</dt><dd>${r.shortlist.map(id => esc(names.get(id) || id)).join(', ') || '<b>none: find helps manually</b>'}</dd>
+          ${r.hired_help_id ? `<dt>Hired</dt><dd>${esc(names.get(r.hired_help_id) || r.hired_help_id)}</dd>` : ''}
+        </dl>
+        <div class="row section" style="flex-wrap:wrap; gap:8px">
+          ${r.status === 'pending_review' ? `<button class="btn small" data-act="confirm_payment">Confirm payment</button><button class="btn small ghost" data-act="reject_payment">Reject code</button>` : ''}
+          ${['paid'].includes(r.status) && r.shortlist.length ? `<select class="input" style="width:auto; min-height:44px" aria-label="Who was hired">${r.shortlist.map(id => `<option value="${esc(id)}">${esc(names.get(id) || id)}</option>`).join('')}</select><button class="btn small ghost" data-act="mark_hired">Mark hired</button>` : ''}
+          ${!['closed', 'hired'].includes(r.status) ? `<button class="link-btn" data-act="close">Close</button>` : ''}
+          <a class="link-btn" href="/shortlist.html?r=${encodeURIComponent(r.id)}" target="_blank" rel="noopener">Open shortlist</a>
+        </div>
+      </div>`).join('')}</div>` : '<div class="card empty">No requests yet.</div>';
+
+    $('#view').querySelectorAll('[data-act]').forEach(btn => btn.addEventListener('click', async () => {
+      const card = btn.closest('[data-id]');
+      const helpId = card.querySelector('select')?.value;
+      if (btn.dataset.act === 'close' && !confirm('Close this request?')) return;
+      btn.disabled = true;
+      try { await call('/api/admin/requests', { method: 'POST', body: { id: card.dataset.id, action: btn.dataset.act, helpId } }); renderRequests(); }
+      catch (ex) { alert(ex.message); btn.disabled = false; }
+    }));
+  }
+
+  function renderAdd() {
+    $('#view').innerHTML = `<form class="card help-admin" id="add" style="max-width:560px">
+      <p class="small" style="margin-top:0">For helps you met on WhatsApp or in person.</p>
+      <div class="field"><label class="label" for="a-name" style="margin:0">Full name</label><input class="input" id="a-name" name="name" required></div>
+      <div class="field"><label class="label" for="a-phone" style="margin:0">Phone</label><input class="input" id="a-phone" name="phone" type="tel" required></div>
+      <div class="field"><label class="label" for="a-area" style="margin:0">Area</label><select class="input" id="a-area" name="area">${areaOptions('')}</select></div>
+      <p class="kicker section" style="margin-bottom:4px">Work</p>
+      <div class="toggles">${checkboxes('kinds', cfg.kinds, [])}</div>
+      <div class="toggles">${checkboxes('tasks', cfg.tasks, [])}</div>
+      <div class="grid2" style="grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px">
+        <label class="meta">Years<input class="input" name="years" type="number" value="0"></label>
+        <label class="meta">Salary KES<input class="input" name="salary" type="number" step="500"></label>
+        <label class="meta">Languages<input class="input" name="languages" value="Kiswahili, English"></label>
+      </div>
+      <label class="meta section" style="display:block">About<textarea class="input" name="about"></textarea></label>
+      <p class="error-text" hidden></p>
+      <button class="btn section" type="submit">Add as pending</button>
+    </form>`;
+    $('#add').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f = e.target, err = f.querySelector('.error-text');
+      err.hidden = true;
+      try {
+        await call('/api/admin/helps', { method: 'POST', body: { name: f.elements.namedItem('name').value, phone: f.phone.value, ...formToHelp(f) } });
+        tab = 'pending';
+        document.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.tab === 'pending')));
+        render();
+      } catch (ex) { err.textContent = ex.message; err.hidden = false; }
+    });
+  }
+
+  async function render() {
+    $('#view').innerHTML = '<div class="empty"><span class="spinner" style="margin:0 auto"></span></div>';
+    try {
+      if (tab === 'pending') await renderHelps(['pending']);
+      else if (tab === 'approved') await renderHelps(['approved']);
+      else if (tab === 'other') await renderHelps(['rejected', 'unavailable']);
+      else if (tab === 'requests') await renderRequests();
+      else renderAdd();
+    } catch (e) {
+      if (e.status === 401) { sessionStorage.removeItem('jirani.admin'); location.reload(); }
+      $('#view').innerHTML = `<div class="card empty">${esc(e.message)}</div>`;
+    }
+  }
+
+  if (token) start();
+</script>
+</body>
+</html>

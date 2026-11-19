@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2D2A7A">
+<meta name="description" content="Pata kazi ya nyumbani karibu na unapoishi. Bure kabisa.">
+<title>Jiunge na Jirani — kazi karibu na nyumbani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>.en { display:block; font-size:12px; font-weight:500; color: var(--muted); }</style>
+</head>
+<body>
+<main class="page">
+  <div class="topbar"><a class="icon-btn" href="/" id="back" aria-label="Rudi"></a><h1>Jiunge · Join</h1></div>
+
+  <div id="done" hidden>
+    <div class="banner soft section"><div><strong>Asante! Tumepokea maelezo yako.</strong><span style="font-size:14px">Tutakupigia simu ndani ya siku 2 kupanga kukutana nawe.</span><span class="en" lang="en">Thank you! We will call you within 2 days to meet you.</span></div></div>
+    <a class="btn ghost section" href="/">Rudi mwanzo · Home</a>
+  </div>
+
+  <form id="form" novalidate>
+    <div class="banner gold section"><div><strong>Bure kabisa. Hatutakutoza chochote.</strong><span class="en" lang="en" style="color:#3A2A06">Free. We never charge helps.</span></div></div>
+    <a class="btn ghost section" id="wa" hidden href="#"><span id="wa-ic"></span>Au jiunge kwa WhatsApp</a>
+
+    <div class="field"><label class="label" for="name" style="margin:0">Jina kamili <span class="en" lang="en">Full name</span></label>
+      <input class="input" id="name" name="name" autocomplete="name" required></div>
+    <div class="field"><label class="label" for="phone" style="margin:0">Nambari ya simu (WhatsApp) <span class="en" lang="en">Phone number</span></label>
+      <input class="input" id="phone" name="phone" type="tel" inputmode="tel" placeholder="0712 345 678" required></div>
+    <div class="field"><label class="label" for="area" style="margin:0">Unaishi wapi? <span class="en" lang="en">Where do you live?</span></label>
+      <select class="input" id="area" name="area" required><option value="">Chagua · Choose</option></select></div>
+
+    <fieldset class="section" style="border:0; padding:0; margin-left:0; margin-right:0">
+      <legend class="label">Aina ya kazi <span class="en" lang="en">Type of work</span></legend>
+      <div class="chips">
+        <label class="chip"><input type="checkbox" name="kinds" value="live-in"><span>Kulala kazini · Live-in</span></label>
+        <label class="chip"><input type="checkbox" name="kinds" value="live-out"><span>Kwenda na kurudi · Live-out</span></label>
+        <label class="chip"><input type="checkbox" name="kinds" value="day"><span>Kazi ya siku · Day jobs</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="section" style="border:0; padding:0; margin-left:0; margin-right:0">
+      <legend class="label">Unaweza kufanya <span class="en" lang="en">You can do</span></legend>
+      <div class="chips">
+        <label class="chip"><input type="checkbox" name="tasks" value="cleaning"><span>Usafi</span></label>
+        <label class="chip"><input type="checkbox" name="tasks" value="cooking"><span>Kupika</span></label>
+        <label class="chip"><input type="checkbox" name="tasks" value="laundry"><span>Kufua</span></label>
+        <label class="chip"><input type="checkbox" name="tasks" value="children"><span>Watoto</span></label>
+        <label class="chip"><input type="checkbox" name="tasks" value="baby"><span>Mtoto mchanga</span></label>
+        <label class="chip"><input type="checkbox" name="tasks" value="elderly"><span>Wazee</span></label>
+      </div>
+    </fieldset>
+
+    <div class="field"><label class="label" for="years" style="margin:0">Miaka ya uzoefu <span class="en" lang="en">Years of experience</span></label>
+      <input class="input" id="years" name="years" type="number" inputmode="numeric" min="0" max="50" value="0"></div>
+    <div class="field"><label class="label" for="salary" style="margin:0">Mshahara unaotaka kwa mwezi (KES) <span class="en" lang="en">Monthly salary you want</span></label>
+      <input class="input" id="salary" name="salary" type="number" inputmode="numeric" min="0" step="500" placeholder="18,500"></div>
+    <div class="field"><label class="label" for="languages" style="margin:0">Lugha <span class="en" lang="en">Languages</span></label>
+      <input class="input" id="languages" name="languages" placeholder="Kiswahili, English"></div>
+    <div class="field"><label class="label" for="about" style="margin:0">Tuambie kuhusu kazi uliyofanya <span class="en" lang="en">Tell us about your past work</span></label>
+      <textarea class="input" id="about" name="about" maxlength="800"></textarea></div>
+
+    <p class="kicker section">Waajiri wa zamani · Past employers</p>
+    <div class="grid2" style="grid-template-columns:1fr 1fr; gap:8px">
+      <label class="sr-only" for="r1n">Jina la mwajiri 1</label><input class="input" id="r1n" name="ref1_name" placeholder="Jina 1">
+      <label class="sr-only" for="r1p">Simu ya mwajiri 1</label><input class="input" id="r1p" name="ref1_phone" type="tel" placeholder="Simu 1">
+      <label class="sr-only" for="r2n">Jina la mwajiri 2</label><input class="input" id="r2n" name="ref2_name" placeholder="Jina 2">
+      <label class="sr-only" for="r2p">Simu ya mwajiri 2</label><input class="input" id="r2p" name="ref2_phone" type="tel" placeholder="Simu 2">
+    </div>
+
+    <label class="check section"><input type="checkbox" id="consent"><span>Nina miaka 18 au zaidi, na nakubali mpigiwe simu waajiri wangu na kitambulisho changu kikaguliwe. <span class="en" lang="en">I am 18 or older and agree to ID and reference checks.</span></span></label>
+
+    <p class="error-text" id="error" role="alert" hidden></p>
+    <div class="sticky-cta static"><button class="btn" id="submit" type="submit">Tuma · Send</button></div>
+  </form>
+</main>
+<script type="module">
+  import { api, getConfig, icons, whatsappLink, $ } from '/app.js';
+  $('#back').innerHTML = icons.back;
+  $('#wa-ic').innerHTML = icons.chat;
+  getConfig().then(c => {
+    for (const a of c.areas) $('#area').add(new Option(a, a));
+    if (c.whatsapp) { $('#wa').href = whatsappLink(c.whatsapp, 'Habari, nataka kujiunga kama mfanyakazi wa nyumbani.'); $('#wa').hidden = false; }
+  });
+
+  $('#form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const f = e.target, err = $('#error'), btn = $('#submit');
+    err.hidden = true;
+    const all = name => [...f.querySelectorAll(`input[name="${name}"]:checked`)].map(i => i.value);
+    const body = {
+      name: f.elements.namedItem('name').value, phone: f.phone.value, area: f.area.value,
+      kinds: all('kinds'), tasks: all('tasks'), years: f.years.value, salary: f.salary.value,
+      languages: f.languages.value, about: f.about.value,
+      ref1_name: f.ref1_name.value, ref1_phone: f.ref1_phone.value,
+      ref2_name: f.ref2_name.value, ref2_phone: f.ref2_phone.value,
+      consent: $('#consent').checked
+    };
+    btn.disabled = true; btn.textContent = 'Inatuma…';
+    try {
+      await api('/api/join', { method: 'POST', body });
+      f.hidden = true; $('#done').hidden = false; scrollTo(0, 0);
+    } catch (ex) {
+      err.textContent = ex.message; err.hidden = false;
+      btn.disabled = false; btn.textContent = 'Tuma · Send';
+    }
+  });
+</script>
+</body>
+</html>

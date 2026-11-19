@@ -1,0 +1,23 @@
+# Cloudflare Pages project config (free plan).
+name = "jirani"
+pages_build_output_dir = "public"
+compatibility_date = "2026-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "jirani"
+database_id = "PASTE-YOUR-D1-DATABASE-ID-HERE"
+
+[vars]
+PAYMENT_MODE = "manual"      # manual | sandbox | live
+MATCH_FEE = "500"
+SUCCESS_FEE = "2500"
+TILL_NUMBER = ""             # your Till or Pochi la Biashara number
+TILL_NAME = "Jirani"
+WHATSAPP_NUMBER = ""         # e.g. 254712345678
+MIN_WAGE = "18047"
+
+# Secrets — set with `wrangler pages secret put NAME`, never put them in this file:
+#   ADMIN_TOKEN            (any long random string, 12+ characters)
+#   MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_SHORTCODE, MPESA_PASSKEY,
+#   MPESA_CALLBACK_SECRET  (only needed for sandbox/live payment modes)

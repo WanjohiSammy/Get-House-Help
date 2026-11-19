@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2D2A7A">
+<meta name="robots" content="noindex">
+<title>Get their numbers — Jirani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="topbar"><a class="icon-btn" id="back" aria-label="Back to shortlist"></a><h1>Get their numbers</h1></div>
+  <div id="body"><div class="empty"><span class="spinner" style="margin:0 auto"></span></div></div>
+</main>
+<script type="module">
+  import { api, getConfig, esc, money, initials, avatarClass, icons, param, $ } from '/app.js';
+  const rid = param('r');
+  const shortlistUrl = `/shortlist.html?r=${encodeURIComponent(rid || '')}`;
+  $('#back').innerHTML = icons.back;
+  $('#back').href = shortlistUrl;
+
+  try {
+    const [data, cfg] = await Promise.all([api(`/api/requests/${encodeURIComponent(rid || '')}`), getConfig()]);
+    if (data.unlocked || ['pending_review', 'awaiting_payment'].includes(data.request.status)) location.replace(shortlistUrl);
+    const names = data.helps.map(h => h.name.split(' ')[0]);
+    const who = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names.at(-1) : names[0] || 'your matches';
+    const manual = cfg.paymentMode === 'manual';
+
+    $('#body').innerHTML = `
+      <div class="card section">
+        <div class="row" style="gap:0">${data.helps.map((h, i) =>
+          `<span class="avatar ${avatarClass(h.id)}" style="width:40px;height:40px;font-size:13px;border:2px solid #fff;${i ? 'margin-left:-10px' : ''}">${esc(initials(h.name))}</span>`).join('')}</div>
+        <p style="margin:12px 0 0; font-size:16px; font-weight:700">${esc(who)}</p>
+        <p class="small" style="margin:4px 0 0">You get all their phone numbers to call and set up interviews.</p>
+        <hr style="border:0; border-top:1px solid #E8E2D6; margin:14px 0">
+        <div class="row" style="justify-content:space-between; font-size:17px; font-weight:800"><span>Pay today</span><span>${money(cfg.matchFee)}</span></div>
+        <p class="small" style="margin:6px 0 0">Only if you hire: ${money(cfg.successFee)}, with a free replacement for 30 days.</p>
+      </div>
+
+      ${manual ? `
+      <div class="card section">
+        <p class="kicker">How to pay</p>
+        <ol style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px">
+          <li>Open M-Pesa, choose <b>Lipa na M-Pesa</b> then <b>Buy Goods</b></li>
+          <li>Till number <b style="font-size:17px">${esc(cfg.till || '—')}</b> (${esc(cfg.tillName)})</li>
+          <li>Amount <b>${money(cfg.matchFee)}</b>, then enter the code from your M-Pesa SMS below</li>
+        </ol>
+      </div>` : ''}
+
+      <form id="form" novalidate>
+        <div class="field">
+          <label class="label" for="phone" style="margin:0">Your M-Pesa number</label>
+          <input class="input" id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0712 345 678" required>
+          <span class="hint">This number is your account. No password, no sign-up.</span>
+        </div>
+        ${manual ? `
+        <div class="field">
+          <label class="label" for="code" style="margin:0">M-Pesa code</label>
+          <input class="input" id="code" autocapitalize="characters" autocomplete="off" maxlength="10" placeholder="e.g. SKL3XY12AB" style="text-transform:uppercase; letter-spacing:0.08em" required>
+        </div>` : ''}
+        <p class="error-text" id="error" role="alert" hidden></p>
+        <div class="sticky-cta static">
+          <button class="btn" id="submit" type="submit">${manual ? 'Send payment code' : 'Pay ' + money(cfg.matchFee) + ' with M-Pesa'}</button>
+          <p class="small center" style="margin:8px 0 0">${manual ? 'We confirm and show the numbers, usually within an hour.' : 'You will get an M-Pesa prompt to enter your PIN.'}</p>
+        </div>
+      </form>`;
+
+    $('#form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const err = $('#error'), btn = $('#submit');
+      err.hidden = true; btn.disabled = true;
+      const label = btn.textContent;
+      btn.textContent = manual ? 'Sending…' : 'Sending the prompt…';
+      try {
+        await api('/api/pay', { method: 'POST', body: { requestId: rid, phone: $('#phone').value, code: manual ? $('#code').value : undefined } });
+        location.href = shortlistUrl;
+      } catch (ex) {
+        err.textContent = ex.message; err.hidden = false;
+        btn.disabled = false; btn.textContent = label;
+      }
+    });
+  } catch (e) {
+    $('#body').innerHTML = `<div class="empty">${esc(e.message)}<p><a href="/">Go home</a></p></div>`;
+  }
+</script>
+</body>
+</html>
