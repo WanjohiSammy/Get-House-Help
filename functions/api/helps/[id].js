@@ -7,13 +7,13 @@ export async function onRequestGet({ request, env, params }) {
   if (!h) return bad('This profile is not available.', 404);
 
   const rid = new URL(request.url).searchParams.get('r');
-  let fromArea = null, unlocked = false;
+  let from = null, unlocked = false;
   if (rid) {
-    const r = await env.DB.prepare('SELECT area, status, shortlist FROM requests WHERE id = ?').bind(rid).first();
+    const r = await env.DB.prepare('SELECT area, lat, lng, status, shortlist FROM requests WHERE id = ?').bind(rid).first();
     if (r) {
-      fromArea = r.area;
+      from = r;
       unlocked = ['paid', 'hired'].includes(r.status) && JSON.parse(r.shortlist || '[]').includes(h.id);
     }
   }
-  return json({ help: publicHelp(h, { fromArea, unlocked }) });
+  return json({ help: publicHelp(h, { from, unlocked }) });
 }

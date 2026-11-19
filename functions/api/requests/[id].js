@@ -16,7 +16,7 @@ export async function onRequestGet({ env, params }) {
     const byId = new Map(results.map(h => [h.id, h]));
     const unlocked = UNLOCKED.includes(r.status);
     helps = ids.map(id => byId.get(id)).filter(Boolean)
-      .map(h => publicHelp(h, { fromArea: r.area, unlocked }));
+      .map(h => publicHelp(h, { from: r, unlocked }));
   }
 
   return json({

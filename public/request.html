@@ -51,6 +51,8 @@
       <label class="label" for="area" style="margin:0">Where do you live?</label>
       <select class="input" id="area" name="area" required><option value="">Choose your area</option></select>
       <span class="hint">Helps who live closest are shown first, so no long-distance fare.</span>
+      <button class="link-btn" type="button" id="locate" style="align-self:flex-start"><span id="pin-ic"></span>&nbsp;Use my location instead (more accurate)</button>
+      <span class="hint" id="loc-msg" role="status"></span>
     </div>
 
     <div class="field">
@@ -67,8 +69,19 @@
   </form>
 </main>
 <script type="module">
-  import { api, getConfig, rememberRequest, icons, param, $ } from '/app.js';
+  import { api, getConfig, rememberRequest, icons, param, getLocation, nearestAreaName, $ } from '/app.js';
   $('#back').innerHTML = icons.back;
+  $('#pin-ic').innerHTML = icons.pin;
+  let point = null;
+  $('#locate').addEventListener('click', async () => {
+    $('#loc-msg').textContent = 'Getting your location…';
+    try {
+      point = await getLocation();
+      const c = await getConfig();
+      select.value = nearestAreaName(point, c.areaPoints);
+      $('#loc-msg').textContent = `Location added (near ${select.value}). We only use it to find helps close to you.`;
+    } catch (e) { $('#loc-msg').textContent = e.message; }
+  });
 
   const kind = param('kind');
   if (kind) {
@@ -92,7 +105,8 @@
       tasks: [...f.querySelectorAll('input[name="tasks"]:checked')].map(i => i.value),
       start: f.start.value,
       area: select.value,
-      notes: f.notes.value
+      notes: f.notes.value,
+      ...(point ? { lat: point.lat, lng: point.lng } : {})
     };
     btn.disabled = true; btn.textContent = 'Finding helps near you…';
     try {

@@ -83,3 +83,68 @@ export const icons = {
   chat: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
   home: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>'
 };
+
+// ---------- Location & maps (free: phone GPS + Leaflet + OpenStreetMap tiles) ----------
+
+// Asks the phone for its location. Resolves { lat, lng } or rejects with a friendly message.
+export function getLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error('This phone cannot share its location. Choose your area instead.'));
+    navigator.geolocation.getCurrentPosition(
+      p => resolve({ lat: Math.round(p.coords.latitude * 1000) / 1000, lng: Math.round(p.coords.longitude * 1000) / 1000 }),
+      e => reject(new Error(e.code === 1
+        ? 'Location is blocked. Allow it in your browser settings, or choose your area instead.'
+        : 'Could not get your location. Choose your area instead.')),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    );
+  });
+}
+
+export function nearestAreaName(point, areaPoints) {
+  const rad = d => d * Math.PI / 180;
+  let best = null, bestD = Infinity;
+  for (const a of areaPoints) {
+    const d = (rad(a.lat - point.lat)) ** 2 + (Math.cos(rad(point.lat)) * rad(a.lng - point.lng)) ** 2;
+    if (d < bestD) { bestD = d; best = a.name; }
+  }
+  return best;
+}
+
+export const googleMapsLink = (lat, lng) => `https://www.google.com/maps?q=${lat},${lng}`;
+
+// Loads Leaflet from the unpkg CDN with integrity checks. Resolves to window.L, or null if it can't load.
+let leafletPromise;
+export function loadLeaflet() {
+  if (window.L) return Promise.resolve(window.L);
+  return (leafletPromise ||= new Promise(resolve => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    css.integrity = 'sha512-Zcn6bjR/8RZbLEpLIeOwNtzREBAJnUKESxces60Mpoj+2okopSAcSUIUOseddDm0cxnGQzxIR7vJgsLZbdLE3w==';
+    css.crossOrigin = '';
+    const js = document.createElement('script');
+    js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    js.integrity = 'sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg==';
+    js.crossOrigin = '';
+    js.onload = () => resolve(window.L || null);
+    js.onerror = () => resolve(null);
+    setTimeout(() => resolve(window.L || null), 12000);
+    document.head.append(css, js);
+  }));
+}
+
+// A map in `el`, centred on `center` ({lat,lng}). Returns null if maps could not load.
+export async function makeMap(el, cfg, center, zoom = 14) {
+  const L = await loadLeaflet();
+  if (!L) return null;
+  const map = L.map(el, { scrollWheelZoom: false }).setView([center.lat, center.lng], zoom);
+  L.tileLayer(cfg.mapTiles, { maxZoom: 19, attribution: cfg.mapAttribution }).addTo(map);
+  return { L, map };
+}
+
+// A pin drawn with CSS, so no marker images need to load.
+export const pinIcon = (L, color = '#2D2A7A') => L.divIcon({
+  className: '',
+  html: `<span style="display:block;width:22px;height:22px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></span>`,
+  iconSize: [22, 22], iconAnchor: [11, 22], popupAnchor: [0, -20]
+});

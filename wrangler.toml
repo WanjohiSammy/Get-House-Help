@@ -16,8 +16,13 @@ TILL_NUMBER = ""             # your Till or Pochi la Biashara number
 TILL_NAME = "Jirani"
 WHATSAPP_NUMBER = ""         # e.g. 254712345678
 MIN_WAGE = "18047"
+ADMIN_NAME = "Samuel"        # shown in the vetting history next to what you record
+# Maps are free OpenStreetMap tiles by default. To switch provider, set both:
+# MAP_TILE_URL = "https://..."  and  MAP_ATTRIBUTION = "..."
 
 # Secrets — set with `wrangler pages secret put NAME`, never put them in this file:
-#   ADMIN_TOKEN            (any long random string, 12+ characters)
+#   ADMIN_TOKEN            (any long random string, 12+ characters) — full access
+#   STAFF_TOKENS           field agents, e.g. "Jane:long-random-1,Peter:long-random-2"
+#                          (they can add and vet helps; they cannot approve, or see requests and payments)
 #   MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_SHORTCODE, MPESA_PASSKEY,
 #   MPESA_CALLBACK_SECRET  (only needed for sandbox/live payment modes)

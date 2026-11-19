@@ -1,8 +1,17 @@
-import { json, bad, readJson, isAdmin, now, displayPhone } from '../../../lib/util.js';
+import { json, bad, readJson, getStaff, now, displayPhone } from '../../../lib/util.js';
+
+// Payments and household requests: admin only.
+function guard(request, env) {
+  const s = getStaff(request, env);
+  if (!s) return bad('Not allowed.', 401);
+  if (s.role !== 'admin') return bad('Only the admin can see requests and payments.', 403);
+  return null;
+}
 
 // GET /api/admin/requests — latest household requests with payment status.
 export async function onRequestGet({ request, env }) {
-  if (!isAdmin(request, env)) return bad('Not allowed.', 401);
+  const denied = guard(request, env);
+  if (denied) return denied;
   const { results } = await env.DB.prepare('SELECT * FROM requests ORDER BY created_at DESC LIMIT 200').all();
   return json({
     requests: results.map(r => ({ ...r, shortlist: JSON.parse(r.shortlist || '[]'), phone_display: displayPhone(r.phone) }))
@@ -11,7 +20,8 @@ export async function onRequestGet({ request, env }) {
 
 // POST /api/admin/requests — { id, action: confirm_payment | reject_payment | mark_hired | close, helpId? }
 export async function onRequestPost({ request, env }) {
-  if (!isAdmin(request, env)) return bad('Not allowed.', 401);
+  const denied = guard(request, env);
+  if (denied) return denied;
   const b = await readJson(request);
   const r = b && await env.DB.prepare('SELECT * FROM requests WHERE id = ?').bind(String(b.id || '')).first();
   if (!r) return bad('Request not found.', 404);

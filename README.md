@@ -14,7 +14,8 @@ It runs free on **Cloudflare Pages** (site + API) with **Cloudflare D1** (databa
 | `/help.html?id=…` | Households | Profile with every check you did |
 | `/pay.html?r=…` | Households | Pay KES 500 by M-Pesa to get all 3 numbers |
 | `/join.html` | House helps | Kiswahili-first sign-up form. Free, always |
-| `/admin.html` | You | Vet and approve helps, add helps you met on WhatsApp, confirm payments, mark hires |
+| `/admin.html` | You and field agents | List of helps to vet, map of all helps, add a help, requests and payments (admin only) |
+| `/admin-help.html?id=…` | You and field agents | One help's vetting checklist, home pin on a map, profile, approve, full history |
 
 **No accounts.** A household's shortlist link is private, and the phone remembers it so they can come back. Their M-Pesa number is their identity. Helps join by form or WhatsApp.
 
@@ -27,7 +28,7 @@ node tests/local-server.mjs      # open http://localhost:8788
 node tests/api.test.mjs          # runs 28 checks on the whole API
 ```
 
-The local server loads 3 demo helps into a temporary in-memory database. Admin token: `test-admin-token-123`.
+The local server loads demo helps into a temporary in-memory database. Admin token: `test-admin-token-123`. Field agent token: `test-agent-token-456`.
 
 ## Put it online for free (about 15 minutes)
 
@@ -46,9 +47,10 @@ The local server loads 3 demo helps into a temporary in-memory database. Admin t
    npm run deploy
    ```
    Your site is live at `https://jirani.pages.dev`, or a similar name if that one is taken.
-7. Set your admin password, then deploy once more so it takes effect:
+7. Set your admin password (and agent tokens, if you have agents), then deploy once more so they take effect:
    ```bash
    npx wrangler pages secret put ADMIN_TOKEN     # paste a long random string
+   npx wrangler pages secret put STAFF_TOKENS    # optional, e.g. Jane:long-random-1
    npm run deploy
    ```
 8. Open `/admin.html` on your site and log in with that token.
@@ -65,10 +67,44 @@ The local server loads 3 demo helps into a temporary in-memory database. Admin t
 2. Set `PAYMENT_MODE = "sandbox"` in `wrangler.toml` and add these secrets: `MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`, `MPESA_SHORTCODE`, `MPESA_PASSKEY`, `MPESA_CALLBACK_SECRET` (any random string).
 3. When Safaricom approves your Go-Live, switch to `PAYMENT_MODE = "live"` with your live keys. For a Till rather than a Paybill, also set `MPESA_TRANSACTION_TYPE = "CustomerBuyGoodsOnline"` and `MPESA_PARTY_B` to the till number. `MPESA_SHORTCODE` is then your store number.
 
+## The vetting portal
+
+Open `/admin.html` and log in with your token.
+
+**Who can do what.** You (`ADMIN_TOKEN`) can do everything. Field agents each get their own token in `STAFF_TOKENS` (for example `"Jane:long-random-1,Peter:long-random-2"`). Agents can add helps, record checks and pin locations. Only you can approve or reject a help, or see requests and payments. Every step records who did it and when.
+
+**The checklist.** Each help has six cards. Badges update automatically from what is recorded, and nobody can tick a badge by hand.
+
+| Step | What to record | Badge earned when |
+| --- | --- | --- |
+| National ID | Saw the original, name matches, 18 or older. **Never record the ID number.** | Passed |
+| Certificate of Good Conduct | Certificate reference and date issued | Passed |
+| Reference 1 and 2 | Prefilled from the join form; how long, would they rehire. "No answer" lets you try again | Both passed |
+| Meet in person | Date, place, four 1–5 scores | Passed |
+| Training (optional) | Course, trainer, date | Any course passed → "Certified" |
+
+**Rules the app enforces:**
+- An ID check can't pass unless all three boxes are ticked.
+- A fail needs a written reason.
+- Nobody can be approved before passing the ID check.
+- If a later ID check fails, an approved help goes straight back to "To vet" and disappears from shortlists.
+
+**Location.** On the help's page, drag the pin to her estate or tap "I'm at her home: use my location". Pins are rounded to about 100 m. Households only ever see the travel time, never the pin. Households and helps can also tap **Use my location** on the request and join forms for more accurate matching. Everyone else is matched on the centre of their area.
+
+## Maps (free)
+
+Maps use [Leaflet](https://leafletjs.com) and free [OpenStreetMap](https://www.openstreetmap.org) tiles. No API key, no card. The public OSM tile servers are donation-funded and meant for light use. That's fine for your staff pages, but if traffic grows, switch to a hosted tile provider by setting `MAP_TILE_URL` and `MAP_ATTRIBUTION`. "Open in Google Maps" links are always free.
+
+Already created your database with the first version? Run the migration once:
+
+```bash
+npx wrangler d1 execute jirani --remote --file=migrations/0002_vetting_and_location.sql
+```
+
 ## Your weekly routine
 
-1. **To vet**: new helps from the join form. Call their 2 references, check their ID on WhatsApp, meet them, tick the checks, write a short public "About", and set the status to `approved`.
-2. **Add a help**: for people who joined by WhatsApp or in person.
+1. **To vet**: new helps from the join form. Open each one and work down the checklist. Agents can do this from their phones in the field.
+2. **Add a help**: for people who joined by WhatsApp or in person. It opens straight into her checklist.
 3. **Requests**: confirm payments and mark who was hired. A request with an empty shortlist means nobody nearby matched yet, so find someone and message the household.
 4. Set a help to `unavailable` once they are hired, so they stop appearing.
 
@@ -82,6 +118,7 @@ The local server loads 3 demo helps into a temporary in-memory database. Admin t
 ## Privacy and safety
 
 - Households see only first name + initial, area and checks until they pay. Then they get full name and phone for their 3 matches only.
-- The app does not store ID photos. Look at them on WhatsApp and delete them once checked.
+- The app never stores ID numbers or ID photos. Look at the ID in person or on WhatsApp, then delete any photo once checked.
+- Home pins are rounded to about 100 m and visible to staff only.
 - Keep `ADMIN_TOKEN` long and private. `/admin.html` is not linked from anywhere and is hidden from search engines.
 - You hold personal data, so read up on registering with Kenya's Office of the Data Protection Commissioner before you grow.

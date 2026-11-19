@@ -29,7 +29,9 @@
     <div class="field"><label class="label" for="phone" style="margin:0">Nambari ya simu (WhatsApp) <span class="en" lang="en">Phone number</span></label>
       <input class="input" id="phone" name="phone" type="tel" inputmode="tel" placeholder="0712 345 678" required></div>
     <div class="field"><label class="label" for="area" style="margin:0">Unaishi wapi? <span class="en" lang="en">Where do you live?</span></label>
-      <select class="input" id="area" name="area" required><option value="">Chagua · Choose</option></select></div>
+      <select class="input" id="area" name="area" required><option value="">Chagua · Choose</option></select>
+      <button class="link-btn" type="button" id="locate" style="align-self:flex-start">Tumia mahali nilipo <span class="en" lang="en" style="display:inline">&nbsp;· Use my location</span></button>
+      <span class="hint" id="loc-msg" role="status"></span></div>
 
     <fieldset class="section" style="border:0; padding:0; margin-left:0; margin-right:0">
       <legend class="label">Aina ya kazi <span class="en" lang="en">Type of work</span></legend>
@@ -76,7 +78,17 @@
   </form>
 </main>
 <script type="module">
-  import { api, getConfig, icons, whatsappLink, $ } from '/app.js';
+  import { api, getConfig, icons, whatsappLink, getLocation, nearestAreaName, $ } from '/app.js';
+  let point = null;
+  $('#locate').addEventListener('click', async () => {
+    $('#loc-msg').textContent = 'Inatafuta… · Finding you…';
+    try {
+      point = await getLocation();
+      const c = await getConfig();
+      $('#area').value = nearestAreaName(point, c.areaPoints);
+      $('#loc-msg').textContent = `Imeongezwa (karibu na ${$('#area').value}). Waajiri hawataona mahali hapa. · Added. Households never see it.`;
+    } catch (e) { $('#loc-msg').textContent = e.message; }
+  });
   $('#back').innerHTML = icons.back;
   $('#wa-ic').innerHTML = icons.chat;
   getConfig().then(c => {
@@ -95,7 +107,8 @@
       languages: f.languages.value, about: f.about.value,
       ref1_name: f.ref1_name.value, ref1_phone: f.ref1_phone.value,
       ref2_name: f.ref2_name.value, ref2_phone: f.ref2_phone.value,
-      consent: $('#consent').checked
+      consent: $('#consent').checked,
+      ...(point ? { lat: point.lat, lng: point.lng } : {})
     };
     btn.disabled = true; btn.textContent = 'Inatuma…';
     try {

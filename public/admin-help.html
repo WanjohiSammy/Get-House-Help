@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#2D2A7A">
+<title>Vetting — Jirani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+  .col { display: flex; flex-direction: column; gap: 12px; }
+  .step-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .state { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 12px; white-space: nowrap; }
+  .state.pass { background: #DDEFE3; color: #1E5B3A; }
+  .state.fail { background: #FDECEA; color: #B42318; }
+  .state.pending, .state.no_answer { background: var(--marigold-tint); color: var(--brown); }
+  .state.none { background: #EFEDE8; color: var(--muted); }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+  .fields .wide { grid-column: 1 / -1; }
+  .fields label.small { display: flex; flex-direction: column; gap: 4px; }
+  .fields .input { min-height: 44px; font-size: 15px; padding: 8px 12px; }
+  .results { display: flex; flex-wrap: wrap; gap: 8px; border: 0; padding: 0; margin: 12px 0 0; }
+  .results legend { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .results .chip span { height: 40px; }
+  #pinmap { height: 260px; border-radius: 14px; border: 1px solid var(--line); margin-top: 10px; }
+  .history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .history li { border-left: 3px solid var(--line); padding-left: 10px; font-size: 13px; }
+  .history li.pass { border-color: var(--green); } .history li.fail { border-color: var(--red); }
+  .toggles { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .toggles label { display: flex; align-items: center; gap: 6px; font-size: 14px; min-height: 40px; }
+  .toggles input { width: 18px; height: 18px; accent-color: var(--indigo); }
+  .dots { display: flex; gap: 4px; } .dots i { width: 12px; height: 12px; border-radius: 6px; background: #E8E2D6; } .dots i.on { background: var(--green); }
+</style>
+</head>
+<body>
+<main class="page wide">
+  <div class="topbar" style="margin-left:0; justify-content:space-between">
+    <a class="row" href="/admin.html" style="gap:4px; font-weight:700"><span id="back"></span>All helps</a>
+    <span class="small" id="who"></span>
+  </div>
+  <div id="root"><div class="empty"><span class="spinner" style="margin:0 auto"></span></div></div>
+</main>
+<script type="module">
+  import { api, getConfig, esc, label, money, initials, avatarClass, icons, whatsappLink, getLocation, makeMap, pinIcon, googleMapsLink, CHECK_LABELS, param, $ } from '/app.js';
+  import { getToken, logout, staffApi, STATUS_PILL, RESULT_TEXT, STEP_CARDS, stepTitle, shortDate } from '/staff.js';
+  $('#back').innerHTML = icons.back;
+
+  const id = param('id');
+  let me, cfg, help, events = [];
+  let mapState = null;
+
+  const localPhone = p => p ? '0' + p.slice(3) : '';
+  const eventsFor = card => events.filter(e => e.step === card.step && (card.slot ? e.slot === card.slot : true));
+
+  function stateOf(card) {
+    const list = eventsFor(card);
+    if (card.step === 'training') {
+      const passed = list.filter(e => e.result === 'pass');
+      return passed.length ? { cls: 'pass', text: `${passed.length} course${passed.length > 1 ? 's' : ''} passed`, last: passed.at(-1) } : list.length ? { cls: list.at(-1).result, text: RESULT_TEXT[list.at(-1).result], last: list.at(-1) } : { cls: 'none', text: 'Not done' };
+    }
+    const last = list.at(-1);
+    return last ? { cls: last.result, text: RESULT_TEXT[last.result], last } : { cls: 'none', text: 'Not done' };
+  }
+
+  function fieldHtml(card, f, prev) {
+    const id = `${card.key}-${f.name}`.replace(':', '-');
+    let value = prev?.[f.name] ?? (f.name in (prev?.scores || {}) ? prev.scores[f.name] : '');
+    if (value === '' && f.prefill) value = f.prefill.endsWith('phone') ? localPhone(help[f.prefill]) : (help[f.prefill] || '');
+    if (f.type === 'check') {
+      return `<label class="check wide"><input type="checkbox" name="${f.name}" id="${id}"><span>${esc(f.label)}</span></label>`;
+    }
+    if (f.type === 'select' || f.type === 'score') {
+      const opts = f.type === 'score' ? [['', '–'], ...[1, 2, 3, 4, 5].map(n => [String(n), String(n)])] : f.options;
+      return `<label class="small" for="${id}">${esc(f.label)}<select class="input" name="${f.name}" id="${id}">${opts.map(([v, t]) =>
+        `<option value="${esc(v)}" ${String(value) === v ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
+    }
+    const type = f.type === 'tel' ? 'tel' : f.type === 'date' ? 'date' : 'text';
+    if (f.type === 'tel' && /^254/.test(value)) value = localPhone(value);
+    return `<label class="small" for="${id}">${esc(f.label)}<input class="input" type="${type}" name="${f.name}" id="${id}" value="${esc(value)}" placeholder="${esc(f.placeholder || '')}"></label>`;
+  }
+
+  function stepCard(card) {
+    const st = stateOf(card);
+    const prev = card.step === 'training' ? null : st.last?.data;
+    const lastLine = st.last ? `<p class="small" style="margin:6px 0 0">${esc(RESULT_TEXT[st.last.result])} · ${esc(st.last.by_name)} · ${esc(shortDate(st.last.created_at))}${st.last.notes ? ' · ' + esc(st.last.notes) : ''}</p>` : '';
+    const refPhone = card.step === 'reference' && help[`ref${card.slot}_phone`]
+      ? `<p class="small" style="margin:6px 0 0">${esc(help[`ref${card.slot}_name`] || 'Employer')}: <a href="tel:+${esc(help[`ref${card.slot}_phone`])}">${esc(localPhone(help[`ref${card.slot}_phone`]))}</a></p>` : '';
+    const results = card.results.map(r => `<label class="chip"><input type="radio" name="result" value="${r}" ${r === 'pass' && st.cls === 'none' ? '' : ''}><span>${esc(RESULT_TEXT[r])}</span></label>`).join('');
+    return `<section class="card" aria-labelledby="h-${card.key.replace(':', '-')}">
+      <div class="step-head"><strong id="h-${card.key.replace(':', '-')}" style="font-size:16px">${esc(card.title)}</strong><span class="state ${st.cls}">${esc(st.text)}</span></div>
+      ${refPhone}${lastLine}
+      <details ${st.cls === 'none' ? '' : ''}>
+        <summary class="link-btn">${st.cls === 'none' ? 'Record result' : 'Record again'}</summary>
+        <form data-key="${esc(card.key)}" novalidate>
+          <p class="hint" style="margin:4px 0 0">${esc(card.hint)}</p>
+          <div class="fields">${card.fields.map(f => fieldHtml(card, f, prev)).join('')}</div>
+          <fieldset class="results"><legend>Result</legend>${results}</fieldset>
+          <label class="small" style="display:flex; flex-direction:column; gap:4px; margin-top:10px">Notes <span class="hint">(needed for a fail)</span>
+            <textarea class="input" name="notes" style="min-height:64px; font-size:15px"></textarea></label>
+          <p class="error-text" role="alert" hidden></p>
+          <button class="btn small section" type="submit">Save ${esc(card.title.toLowerCase())}</button>
+        </form>
+      </details>
+    </section>`;
+  }
+
+  function decisionCard() {
+    const admin = me.role === 'admin';
+    const done = help.checks_done;
+    const dots = ['id_verified', 'good_conduct', 'refs_called', 'interviewed', 'certified'].map(k => `<i class="${help[k] ? 'on' : ''}" title="${esc(CHECK_LABELS[k])}"></i>`).join('');
+    let actions = '';
+    if (admin && help.status !== 'approved') {
+      actions += help.id_verified
+        ? `<button class="btn small" data-status="approved">Approve</button>`
+        : `<button class="btn small" disabled title="Pass the ID check first">Approve</button>`;
+    }
+    if (admin && help.status !== 'rejected') actions += `<button class="btn small ghost" data-status="rejected">Reject</button>`;
+    if (help.status !== 'unavailable') actions += `<button class="btn small ghost" data-status="unavailable">Hired / away</button>`;
+    if (help.status !== 'pending') actions += `<button class="link-btn" data-status="pending">Back to vetting</button>`;
+    return `<section class="card">
+      <div class="step-head"><strong style="font-size:16px">Decision</strong><span class="${STATUS_PILL[help.status]}">${esc(help.status)}</span></div>
+      <div class="row" style="margin-top:10px"><span class="dots">${dots}</span><span class="small">${done} of 5 checks · badge <b>${esc(help.badge)}</b></span></div>
+      ${!help.id_verified ? '<p class="small" style="margin:8px 0 0">A passed ID check is needed before approval.</p>' : done < 4 && help.status !== 'approved' ? `<p class="small" style="margin:8px 0 0">Only ${done} checks done. Households will see which ones are missing.</p>` : ''}
+      ${!admin ? '<p class="small" style="margin:8px 0 0">Only the admin can approve. Tell them when she is ready.</p>' : ''}
+      <div class="row section" style="flex-wrap:wrap; gap:8px">${actions}</div>
+      <p class="error-text" id="decision-error" role="alert" hidden></p>
+    </section>`;
+  }
+
+  function locationCard() {
+    const has = help.lat != null;
+    return `<section class="card">
+      <div class="step-head"><strong style="font-size:16px">Where she lives</strong><span class="state ${has ? 'pass' : 'none'}">${has ? 'Pinned' : 'Area only'}</span></div>
+      <p class="small" style="margin:6px 0 0">Drag the pin to her estate or tap the map. Saved to about 100 m. Households only ever see the travel time, never this pin.</p>
+      <div id="pinmap" role="region" aria-label="Map to set where she lives"></div>
+      <div id="map-fallback" hidden class="fields">
+        <label class="small">Latitude<input class="input" id="lat" inputmode="decimal" value="${has ? help.lat : ''}"></label>
+        <label class="small">Longitude<input class="input" id="lng" inputmode="decimal" value="${has ? help.lng : ''}"></label>
+      </div>
+      <div class="row section" style="flex-wrap:wrap; gap:8px">
+        <button class="btn small ghost" id="here" type="button">I'm at her home: use my location</button>
+        <button class="btn small" id="savepin" type="button">Save pin</button>
+        ${has ? `<button class="link-btn" id="clearpin" type="button">Remove pin</button><a class="link-btn" href="${googleMapsLink(help.lat, help.lng)}" target="_blank" rel="noopener">Open in Google Maps</a>` : ''}
+      </div>
+      <p class="small" id="pin-msg" role="status"></p>
+    </section>`;
+  }
+
+  function profileCard() {
+    const kinds = help.kinds.split(',').filter(Boolean), tasks = help.tasks.split(',').filter(Boolean);
+    const checks = (name, list, sel) => list.map(o => `<label><input type="checkbox" name="${name}" value="${o}" ${sel.includes(o) ? 'checked' : ''}>${esc(label(o))}</label>`).join('');
+    return `<details class="card"><summary class="step-head"><strong style="font-size:16px">Profile</strong><span class="link-btn">Edit</span></summary>
+      <form id="profile" novalidate>
+        <div class="fields">
+          <label class="small wide">Full name<input class="input" name="fullname" value="${esc(help.name)}"></label>
+          <label class="small">Phone<input class="input" name="phone" type="tel" value="${esc(localPhone(help.phone))}"></label>
+          <label class="small">Area<select class="input" name="area">${cfg.areas.map(a => `<option ${a === help.area ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select></label>
+        </div>
+        <p class="kicker section" style="margin-bottom:4px">Type of work</p><div class="toggles">${checks('kinds', cfg.kinds, kinds)}</div>
+        <p class="kicker" style="margin:10px 0 4px">Can do</p><div class="toggles">${checks('tasks', cfg.tasks, tasks)}</div>
+        <div class="fields">
+          <label class="small">Years of experience<input class="input" name="years" type="number" min="0" value="${esc(help.years)}"></label>
+          <label class="small">Salary (KES / month)<input class="input" name="salary" type="number" step="500" value="${esc(help.salary ?? '')}"></label>
+          <label class="small wide">Languages<input class="input" name="languages" value="${esc(help.languages)}"></label>
+          <label class="small wide">About her <span class="hint">(households see this; write it with her)</span><textarea class="input" name="about" maxlength="800" style="font-size:15px">${esc(help.about)}</textarea></label>
+          <label class="small">Reference 1 name<input class="input" name="ref1_name" value="${esc(help.ref1_name || '')}"></label>
+          <label class="small">Reference 1 phone<input class="input" name="ref1_phone" type="tel" value="${esc(localPhone(help.ref1_phone))}"></label>
+          <label class="small">Reference 2 name<input class="input" name="ref2_name" value="${esc(help.ref2_name || '')}"></label>
+          <label class="small">Reference 2 phone<input class="input" name="ref2_phone" type="tel" value="${esc(localPhone(help.ref2_phone))}"></label>
+          <label class="small wide">Private notes <span class="hint">(staff only)</span><textarea class="input" name="admin_notes" style="font-size:15px">${esc(help.admin_notes)}</textarea></label>
+        </div>
+        <p class="error-text" role="alert" hidden></p>
+        <div class="row section"><button class="btn small" type="submit">Save profile</button><span class="small" id="profile-ok" role="status"></span></div>
+      </form>
+    </details>`;
+  }
+
+  function historyCard() {
+    const items = [...events].reverse().map(e => {
+      const d = e.data || {};
+      const bits = [];
+      if (d.certRef) bits.push(`ref ${d.certRef}`);
+      if (d.issued) bits.push(`issued ${d.issued}`);
+      if (d.rehire) bits.push(`would rehire: ${d.rehire}`);
+      if (d.duration) bits.push(d.duration);
+      if (d.scores) { const s = Object.values(d.scores).filter(Boolean); if (s.length) bits.push(`average score ${(s.reduce((a, b) => a + b, 0) / s.length).toFixed(1)}/5`); }
+      if (d.course) bits.push(d.course + (d.provider ? ` (${d.provider})` : ''));
+      return `<li class="${esc(e.result)}"><strong>${esc(stepTitle(e))}</strong> · ${e.step === 'note' ? '' : esc(RESULT_TEXT[e.result]) + ' · '}${esc(e.by_name)} · ${esc(shortDate(e.created_at))}
+        ${bits.length ? `<br><span class="small">${esc(bits.join(' · '))}</span>` : ''}${e.notes ? `<br>${esc(e.notes)}` : ''}</li>`;
+    }).join('');
+    return `<section class="card">
+      <strong style="font-size:16px">History</strong>
+      <form id="note" class="row" style="margin:10px 0 14px; gap:8px" novalidate>
+        <label class="sr-only" for="note-text">Add a note</label>
+        <input class="input" id="note-text" name="notes" placeholder="Add a note" style="min-height:44px; font-size:15px">
+        <button class="btn small ghost" type="submit">Add</button>
+      </form>
+      ${items ? `<ul class="history">${items}</ul>` : '<p class="small">Nothing recorded yet.</p>'}
+    </section>`;
+  }
+
+  function render() {
+    document.title = `${help.name} — Jirani staff`;
+    $('#root').innerHTML = `
+      <section class="card" style="margin-bottom:16px">
+        <div class="row" style="align-items:flex-start; flex-wrap:wrap">
+          <span class="avatar ${avatarClass(help.id)}">${esc(initials(help.name))}</span>
+          <div style="flex:1; min-width:200px">
+            <h1 style="margin:0; font-size:22px; letter-spacing:-0.02em">${esc(help.name)}</h1>
+            <p class="small" style="margin:2px 0 0">${esc(help.area)} · ${help.kinds.split(',').filter(Boolean).map(label).join(', ') || 'no work type'} · ${help.years} yrs${help.salary ? ' · asks ' + money(help.salary) : ''}</p>
+            <p class="small" style="margin:2px 0 0">Joined ${esc(shortDate(help.created_at))} · added by ${esc(help.added_by)}</p>
+          </div>
+          <div class="row" style="gap:8px">
+            <a class="btn small" href="tel:+${esc(help.phone)}">${icons.phone} ${esc(help.phone_display)}</a>
+            <a class="btn small ghost" href="${whatsappLink(help.phone)}" target="_blank" rel="noopener">${icons.chat} WhatsApp</a>
+          </div>
+        </div>
+      </section>
+      <div class="layout">
+        <div class="col"><p class="kicker" style="margin:0">Vetting checklist</p>${STEP_CARDS.map(stepCard).join('')}</div>
+        <div class="col">${decisionCard()}${locationCard()}${profileCard()}${historyCard()}</div>
+      </div>`;
+    wire();
+  }
+
+  async function record(body, errEl) {
+    errEl && (errEl.hidden = true);
+    try {
+      const res = await staffApi('/api/admin/vetting', { method: 'POST', body: { helpId: help.id, ...body } });
+      help = res.help; events = res.events; render();
+    } catch (ex) { if (errEl) { errEl.textContent = ex.message; errEl.hidden = false; } else alert(ex.message); }
+  }
+
+  async function update(body, errEl) {
+    errEl && (errEl.hidden = true);
+    try {
+      const res = await staffApi('/api/admin/helps', { method: 'POST', body: { id: help.id, ...body } });
+      help = res.help; render(); return true;
+    } catch (ex) { if (errEl) { errEl.textContent = ex.message; errEl.hidden = false; } else alert(ex.message); return false; }
+  }
+
+  function wire() {
+    // Step forms
+    document.querySelectorAll('form[data-key]').forEach(form => form.addEventListener('submit', e => {
+      e.preventDefault();
+      const card = STEP_CARDS.find(c => c.key === form.dataset.key);
+      const err = form.querySelector('.error-text');
+      const result = form.querySelector('input[name="result"]:checked')?.value;
+      if (!result) { err.textContent = 'Choose a result.'; err.hidden = false; return; }
+      const data = {}, scores = {};
+      for (const f of card.fields) {
+        const el = form.elements.namedItem(f.name);
+        if (f.type === 'check') data[f.name] = el.checked;
+        else if (f.type === 'score') scores[f.name] = el.value;
+        else data[f.name] = el.value;
+      }
+      if (card.step === 'interview') data.scores = scores;
+      form.querySelector('button[type="submit"]').disabled = true;
+      record({ step: card.step, slot: card.slot, result, notes: form.elements.namedItem('notes').value, data }, err)
+        .finally(() => { const b = form.querySelector('button[type="submit"]'); if (b) b.disabled = false; });
+    }));
+
+    // Decision buttons
+    document.querySelectorAll('[data-status]').forEach(btn => btn.addEventListener('click', () => {
+      const s = btn.dataset.status;
+      if (s === 'rejected' && !confirm(`Reject ${help.name}? She will not be shown to households.`)) return;
+      update({ status: s }, $('#decision-error'));
+    }));
+
+    // Note
+    $('#note').addEventListener('submit', e => {
+      e.preventDefault();
+      const text = $('#note-text').value.trim();
+      if (text) record({ step: 'note', notes: text });
+    });
+
+    // Profile
+    $('#profile').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f = e.target, all = n => [...f.querySelectorAll(`input[name="${n}"]:checked`)].map(i => i.value);
+      const ok = await update({
+        name: f.fullname.value, phone: f.phone.value, area: f.area.value, kinds: all('kinds'), tasks: all('tasks'),
+        years: f.years.value, salary: f.salary.value, languages: f.languages.value, about: f.about.value,
+        ref1_name: f.ref1_name.value, ref1_phone: f.ref1_phone.value, ref2_name: f.ref2_name.value, ref2_phone: f.ref2_phone.value,
+        admin_notes: f.admin_notes.value
+      }, f.querySelector('.error-text'));
+      if (ok) { $('#profile-ok').textContent = 'Saved'; }
+    });
+
+    wireMap();
+  }
+
+  async function wireMap() {
+    const area = cfg.areaPoints.find(a => a.name === help.area) || { lat: -1.2864, lng: 36.8172 };
+    let point = help.lat != null ? { lat: help.lat, lng: help.lng } : { lat: area.lat, lng: area.lng };
+    const msg = t => { $('#pin-msg').textContent = t; };
+    const m = await makeMap($('#pinmap'), cfg, point, help.lat != null ? 16 : 14);
+    let marker = null;
+    if (m) {
+      marker = m.L.marker([point.lat, point.lng], { draggable: true, icon: pinIcon(m.L), title: 'Her home area', keyboard: true }).addTo(m.map);
+      marker.on('dragend', () => { const p = marker.getLatLng(); point = { lat: p.lat, lng: p.lng }; msg('Not saved yet.'); });
+      m.map.on('click', ev => { marker.setLatLng(ev.latlng); point = { lat: ev.latlng.lat, lng: ev.latlng.lng }; msg('Not saved yet.'); });
+    } else {
+      $('#pinmap').hidden = true; $('#map-fallback').hidden = false;
+      msg('The map could not load. You can still type the location or use your phone\'s location.');
+    }
+    $('#here').addEventListener('click', async () => {
+      msg('Getting your location…');
+      try {
+        point = await getLocation();
+        if (marker) { marker.setLatLng([point.lat, point.lng]); m.map.setView([point.lat, point.lng], 16); }
+        else { $('#lat').value = point.lat; $('#lng').value = point.lng; }
+        msg('Location found. Press Save pin.');
+      } catch (ex) { msg(ex.message); }
+    });
+    $('#savepin').addEventListener('click', async () => {
+      if (!marker) point = { lat: parseFloat($('#lat').value), lng: parseFloat($('#lng').value) };
+      if (!Number.isFinite(point.lat) || !Number.isFinite(point.lng)) { msg('Enter a location first.'); return; }
+      if (await update({ lat: point.lat, lng: point.lng })) $('#pin-msg').textContent = 'Pin saved.';
+    });
+    $('#clearpin')?.addEventListener('click', () => update({ lat: null, lng: null }));
+  }
+
+  try {
+    if (!getToken()) logout();
+    [me, cfg] = await Promise.all([api('/api/admin/me', { token: getToken() }), getConfig()]);
+    $('#who').textContent = `${me.name} · ${me.role === 'admin' ? 'admin' : 'field agent'}`;
+    ({ help, events } = await staffApi(`/api/admin/helps/${encodeURIComponent(id || '')}`));
+    render();
+  } catch (e) {
+    if (e.status === 401) logout();
+    $('#root').innerHTML = `<div class="card empty">${esc(e.message)}<p><a href="/admin.html">Back to all helps</a></p></div>`;
+  }
+</script>
+</body>
+</html>
