@@ -1,24 +1,14 @@
-// Run with: node tests/api.test.mjs  (Node 22.5+). Tests the whole API against an in-memory SQLite copy of the database.
-import { DatabaseSync } from 'node:sqlite';
+// Run with: node tests/api.test.mjs  (or: npm test). Needs Node.js 22.5+.
+// Tests the whole API against an in-memory SQLite copy of the database.
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
+import { loadSqlite, d1 } from './_sqlite.mjs';
 
+const DatabaseSync = await loadSqlite(import.meta.url);
 const ROOT_URL = new URL('../', import.meta.url);
 const sqlite = new DatabaseSync(':memory:');
 sqlite.exec(readFileSync(new URL('schema.sql', ROOT_URL), 'utf8'));
-
-// Minimal D1 shim
-const DB = {
-  prepare(sql) {
-    const make = (args) => ({
-      bind: (...a) => make(a),
-      first: async () => sqlite.prepare(sql).get(...args) ?? null,
-      all: async () => ({ results: sqlite.prepare(sql).all(...args) }),
-      run: async () => { const r = sqlite.prepare(sql).run(...args); return { meta: { changes: r.changes } }; }
-    });
-    return make([]);
-  }
-};
+const DB = d1(sqlite);
 
 const ADMIN = 'test-admin-token-123', AGENT = 'agent-jane-token-456';
 const env = {

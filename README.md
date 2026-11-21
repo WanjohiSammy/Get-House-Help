@@ -19,16 +19,34 @@ It runs free on **Cloudflare Pages** (site + API) with **Cloudflare D1** (databa
 
 **No accounts.** A household's shortlist link is private, and the phone remembers it so they can come back. Their M-Pesa number is their identity. Helps join by form or WhatsApp.
 
-## Try it on your laptop (nothing to install)
+## Try it on your computer (nothing to install)
 
-You need Node.js 22.5 or newer.
+1. Install **Node.js 22.5 or newer**, the LTS version from [nodejs.org](https://nodejs.org). Check with `node --version`.
+2. Unzip the project, open a terminal **inside the `jirani-app` folder**, and run:
+   ```bash
+   npm start        # same as: node tests/local-server.mjs
+   ```
+3. Open the address it prints, usually **http://localhost:8788**. If that port is busy, it uses the next free one and tells you which.
+   - Staff portal: `/admin.html`. Admin token `test-admin-token-123`, field agent token `test-agent-token-456` (Jane).
+   - Demo helps are loaded, including Ruth Atieno waiting to be vetted. Everything resets when you stop the server with Ctrl+C.
+4. Run the automated checks with `npm test`. It should end with "All 36 checks passed."
 
+**If it doesn't work:**
+
+| You see | Fix |
+| --- | --- |
+| "Jirani needs Node.js 22.5 or newer" | Install the LTS from nodejs.org, then open a **new** terminal |
+| A page saying "Start the Jirani server first" | You opened the HTML file directly. Run `npm start` and use the localhost address |
+| `Cannot find module …/tests/local-server.mjs` | Your terminal isn't in the `jirani-app` folder. `cd` into it first |
+| Pages load but fonts look plain | Normal when offline; Google Fonts loads when you're online |
+| Anything else | Copy the full error from the terminal and send it to me |
+
+**Optional: Cloudflare's own local runner.** This is closer to the live site, but it downloads Wrangler the first time:
 ```bash
-node tests/local-server.mjs      # open http://localhost:8788
-node tests/api.test.mjs          # runs 28 checks on the whole API
+cp .dev.vars.example .dev.vars     # on Windows: copy .dev.vars.example .dev.vars
+npm run dev:setup                  # creates the local database with demo data
+npm run dev
 ```
-
-The local server loads demo helps into a temporary in-memory database. Admin token: `test-admin-token-123`. Field agent token: `test-agent-token-456`.
 
 ## Put it online for free (about 15 minutes)
 
@@ -46,6 +64,7 @@ The local server loads demo helps into a temporary in-memory database. Admin tok
    npx wrangler pages project create jirani --production-branch main
    npm run deploy
    ```
+   The deploy script uses `--branch main`, so it always goes to your live address and not to a preview copy.
    Your site is live at `https://jirani.pages.dev`, or a similar name if that one is taken.
 7. Set your admin password (and agent tokens, if you have agents), then deploy once more so they take effect:
    ```bash

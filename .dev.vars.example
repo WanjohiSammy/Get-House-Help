@@ -1,5 +1,6 @@
 # Copy to .dev.vars for `npm run dev` (wrangler local). Never commit .dev.vars.
-ADMIN_TOKEN=change-me-to-a-long-random-string
+ADMIN_TOKEN=test-admin-token-123
+STAFF_TOKENS=Jane:test-agent-token-456
 # Only for PAYMENT_MODE=sandbox or live:
 MPESA_CONSUMER_KEY=
 MPESA_CONSUMER_SECRET=
