@@ -18,7 +18,8 @@ sqlite.exec(readFileSync(new URL('seed.sql', ROOT_URL), 'utf8'));
 const env = {
   DB: d1(sqlite),
   ADMIN_TOKEN: 'test-admin-token-123', ADMIN_NAME: 'Admin', STAFF_TOKENS: 'Jane:test-agent-token-456',
-  PAYMENT_MODE: 'manual', TILL_NUMBER: '123456', WHATSAPP_NUMBER: '254700000000'
+  // Free pilot by default. Try payments with:  PAYMENT_MODE=manual npm start
+  PAYMENT_MODE: process.env.PAYMENT_MODE || 'free', PAY_TO_TYPE: 'till', PAY_TO_NUMBER: '123456', WHATSAPP_NUMBER: '254700000000'
 };
 
 const routes = [
@@ -83,6 +84,6 @@ server.on('listening', () => {
   console.log(`  Staff:       ${base}/admin.html`);
   console.log(`               admin token        test-admin-token-123`);
   console.log(`               field agent token  test-agent-token-456  (Jane)\n`);
-  console.log(`  Demo data resets when you stop the server (Ctrl+C).\n`);
+  console.log(`  Payment mode: ${env.PAYMENT_MODE}. Demo data resets when you stop the server (Ctrl+C).\n`);
 });
 server.listen(port);

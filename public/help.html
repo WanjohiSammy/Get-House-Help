@@ -73,6 +73,7 @@
       <div class="sticky-cta">
         ${h.phone
           ? `<a class="btn" href="tel:+${esc(h.phoneIntl)}">${icons.phone} Call ${esc(h.name.split(' ')[0])}</a>`
+          : rid && cfg.paymentMode === 'free' ? `<a class="btn" href="/shortlist.html?r=${encodeURIComponent(rid)}">Back to your matches</a>`
           : rid ? `<a class="btn" href="/pay.html?r=${encodeURIComponent(rid)}">Book interview · ${money(cfg.matchFee)}</a>`
                 : `<a class="btn" href="/request.html">Find helps near you</a>`}
       </div>`;

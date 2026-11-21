@@ -26,7 +26,7 @@
   <div id="body"><div class="empty"><span class="spinner" style="margin:0 auto"></span></div></div>
 </main>
 <script type="module">
-  import { api, getConfig, esc, money, initials, avatarClass, icons, param, $ } from '/app.js';
+  import { api, getConfig, esc, money, initials, avatarClass, icons, param, payToText, $ } from '/app.js';
   const rid = param('r');
   const shortlistUrl = `/shortlist.html?r=${encodeURIComponent(rid || '')}`;
   $('#back').innerHTML = icons.back;
@@ -34,7 +34,7 @@
 
   try {
     const [data, cfg] = await Promise.all([api(`/api/requests/${encodeURIComponent(rid || '')}`), getConfig()]);
-    if (data.unlocked || ['pending_review', 'awaiting_payment'].includes(data.request.status)) location.replace(shortlistUrl);
+    if (cfg.paymentMode === 'free' || data.unlocked || ['pending_review', 'awaiting_payment'].includes(data.request.status)) { location.replace(shortlistUrl); await new Promise(() => {}); }
     const names = data.helps.map(h => h.name.split(' ')[0]);
     const who = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names.at(-1) : names[0] || 'your matches';
     const manual = cfg.paymentMode === 'manual';
@@ -54,8 +54,7 @@
       <div class="card section">
         <p class="kicker">How to pay</p>
         <ol style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px">
-          <li>Open M-Pesa, choose <b>Lipa na M-Pesa</b> then <b>Buy Goods</b></li>
-          <li>Till number <b style="font-size:17px">${esc(cfg.till || '—')}</b> (${esc(cfg.tillName)})</li>
+          ${payToText(cfg).steps.map(x => `<li>${x}</li>`).join('')}
           <li>Amount <b>${money(cfg.matchFee)}</b>, then enter the code from your M-Pesa SMS below</li>
         </ol>
       </div>` : ''}
@@ -63,7 +62,7 @@
       <form id="form" novalidate>
         <div class="field">
           <label class="label" for="phone" style="margin:0">Your M-Pesa number</label>
-          <input class="input" id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0712 345 678" required>
+          <input class="input" id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0712 345 678" value="${esc(data.request.phone || '')}" required>
           <span class="hint">This number is your account. No password, no sign-up.</span>
         </div>
         ${manual ? `

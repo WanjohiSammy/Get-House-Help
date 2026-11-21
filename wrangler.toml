@@ -1,4 +1,4 @@
-# Cloudflare Pages project config (free plan).
+# Cloudflare Pages project config (free plan). See README.md → "Settings".
 name = "jirani"
 pages_build_output_dir = "public"
 compatibility_date = "2026-11-01"
@@ -6,23 +6,27 @@ compatibility_date = "2026-11-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "jirani"
-database_id = "PASTE-YOUR-D1-DATABASE-ID-HERE"
+database_id = "PASTE-YOUR-D1-DATABASE-ID-HERE"   # printed by: npx wrangler d1 create jirani
 
 [vars]
-PAYMENT_MODE = "manual"      # manual | sandbox | live
+# How households pay. Start with "free" (no fees; you share contacts from /admin).
+#   free | manual (Till / Pochi / phone + M-Pesa code) | sandbox | live (automatic M-Pesa prompt)
+PAYMENT_MODE = "free"
 MATCH_FEE = "500"
 SUCCESS_FEE = "2500"
-TILL_NUMBER = ""             # your Till or Pochi la Biashara number
-TILL_NAME = "Jirani"
-WHATSAPP_NUMBER = ""         # e.g. 254712345678
-MIN_WAGE = "18047"
+PAY_TO_TYPE = "pochi"        # till | pochi | phone   (only used in manual mode)
+PAY_TO_NUMBER = ""           # your Till, Pochi la Biashara or M-Pesa number
+PAY_TO_NAME = "Jirani"       # the name M-Pesa shows when they pay
+WHATSAPP_NUMBER = ""         # your WhatsApp, e.g. 254712345678. Empty hides the "Message us" buttons.
 ADMIN_NAME = "Samuel"        # shown in the vetting history next to what you record
+MIN_WAGE = "18047"           # KES per month, shown to households on every profile
+MAX_DISTANCE_KM = "15"       # never suggest helps who live further than this
 # Maps are free OpenStreetMap tiles by default. To switch provider, set both:
-# MAP_TILE_URL = "https://..."  and  MAP_ATTRIBUTION = "..."
+# MAP_TILE_URL = "https://..."
+# MAP_ATTRIBUTION = "..."
 
-# Secrets — set with `wrangler pages secret put NAME`, never put them in this file:
-#   ADMIN_TOKEN            (any long random string, 12+ characters) — full access
-#   STAFF_TOKENS           field agents, e.g. "Jane:long-random-1,Peter:long-random-2"
-#                          (they can add and vet helps; they cannot approve, or see requests and payments)
+# Secrets: set with `npx wrangler pages secret put NAME`. Never write them in this file.
+#   ADMIN_TOKEN     your password for /admin.html (long and random, 12+ characters)
+#   STAFF_TOKENS    optional field agents, e.g. "Jane:long-random-1,Peter:long-random-2"
 #   MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_SHORTCODE, MPESA_PASSKEY,
-#   MPESA_CALLBACK_SECRET  (only needed for sandbox/live payment modes)
+#   MPESA_CALLBACK_SECRET   only for PAYMENT_MODE sandbox or live

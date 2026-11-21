@@ -66,6 +66,12 @@
     </div>
 
     <div class="field">
+      <label class="label" for="phone" style="margin:0">Your WhatsApp number</label>
+      <input class="input" id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0712 345 678" required>
+      <span class="hint">We send your matches here. No sign-up, no password.</span>
+    </div>
+
+    <div class="field">
       <label class="label" for="notes" style="margin:0">Anything else? <span class="small">(optional)</span></label>
       <textarea class="input" id="notes" name="notes" maxlength="500" placeholder="For example: two children aged 2 and 5, we speak Kiswahili at home"></textarea>
     </div>
@@ -73,7 +79,7 @@
     <p class="error-text" id="error" role="alert" hidden></p>
 
     <div class="sticky-cta">
-      <button class="btn" type="submit" id="submit">Show me 3 matches</button>
+      <button class="btn" type="submit" id="submit">Show me my matches</button>
       <p class="small center" style="margin:8px 0 0">Free to look. No sign-up.</p>
     </div>
   </form>
@@ -103,6 +109,7 @@
   getConfig().then(c => {
     for (const a of c.areas) select.add(new Option(a, a));
     try { const last = localStorage.getItem('jirani.area'); if (last) select.value = last; } catch {}
+    try { const ph = localStorage.getItem('jirani.phone'); if (ph) $('#phone').value = ph; } catch {}
   });
 
   $('#form').addEventListener('submit', async e => {
@@ -115,6 +122,7 @@
       tasks: [...f.querySelectorAll('input[name="tasks"]:checked')].map(i => i.value),
       start: f.start.value,
       area: select.value,
+      phone: f.phone.value,
       notes: f.notes.value,
       ...(point ? { lat: point.lat, lng: point.lng } : {})
     };
@@ -122,11 +130,11 @@
     try {
       const { id } = await api('/api/requests', { method: 'POST', body });
       rememberRequest(id);
-      try { localStorage.setItem('jirani.area', select.value); } catch {}
+      try { localStorage.setItem('jirani.area', select.value); localStorage.setItem('jirani.phone', f.phone.value); } catch {}
       location.href = `/shortlist.html?r=${encodeURIComponent(id)}`;
     } catch (ex) {
       err.textContent = ex.message; err.hidden = false;
-      btn.disabled = false; btn.textContent = 'Show me 3 matches';
+      btn.disabled = false; btn.textContent = 'Show me my matches';
     }
   });
 </script>

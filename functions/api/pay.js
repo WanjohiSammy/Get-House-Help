@@ -17,6 +17,8 @@ export async function onRequestPost({ request, env }) {
   const phone = normalizePhone(b.phone);
   if (!phone) return bad('Please write a valid M-Pesa number, like 0712 345 678.');
 
+  if (s.paymentMode === 'free') return bad('No payment is needed during the pilot. We will call you.');
+
   if (s.paymentMode === 'manual') {
     const code = String(b.code || '').trim().toUpperCase();
     if (!/^[A-Z0-9]{10}$/.test(code)) return bad('The M-Pesa code is 10 letters and numbers, like SKL3XY12AB.');

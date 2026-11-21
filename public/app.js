@@ -110,6 +110,14 @@ export function nearestAreaName(point, areaPoints) {
   return best;
 }
 
+// "Till 123456 (Jirani)" etc., from /api/config.
+export function payToText(cfg) {
+  const n = cfg.payToNumber || '—';
+  if (cfg.payToType === 'till') return { where: `Till ${n}`, steps: ['Open M-Pesa, choose <b>Lipa na M-Pesa</b> then <b>Buy Goods</b>', `Till number <b style="font-size:17px">${esc(n)}</b> (${esc(cfg.payToName)})`] };
+  if (cfg.payToType === 'pochi') return { where: `Pochi la Biashara ${n}`, steps: ['Open M-Pesa, choose <b>Send Money</b> then <b>Pochi la Biashara</b>', `Number <b style="font-size:17px">${esc(n)}</b> (${esc(cfg.payToName)})`] };
+  return { where: `M-Pesa ${n}`, steps: ['Open M-Pesa and choose <b>Send Money</b>', `Number <b style="font-size:17px">${esc(n)}</b> (${esc(cfg.payToName)})`] };
+}
+
 export const googleMapsLink = (lat, lng) => `https://www.google.com/maps?q=${lat},${lng}`;
 
 // Loads Leaflet from the unpkg CDN with integrity checks. Resolves to window.L, or null if it can't load.

@@ -152,7 +152,7 @@ assert.equal(r.data.help.status, 'pending'); assert.equal(r.data.help.id_verifie
 ok('a failed ID check takes an approved help off the list');
 
 // 6. Household request (with a location)
-r = await post(reqIndex.onRequestPost, '/api/requests', { kind: 'live-in', tasks: ['cleaning', 'cooking', 'children'], area: 'Kileleshwa', start: 'Next week', lat: -1.2806, lng: 36.783 });
+r = await post(reqIndex.onRequestPost, '/api/requests', { phone: '0700999888', kind: 'live-in', tasks: ['cleaning', 'cooking', 'children'], area: 'Kileleshwa', start: 'Next week', lat: -1.2806, lng: 36.783 });
 assert.equal(r.status, 201); assert.equal(r.data.matches, 3);
 const rid = r.data.id;
 r = await call(reqId.onRequestGet, `/api/requests/${rid}`, {}, { id: rid });
@@ -174,7 +174,7 @@ r = await post(pay.onRequestPost, '/api/pay', { requestId: rid, phone: '07001234
 assert.equal(r.status, 400); ok('bad M-Pesa code rejected');
 r = await post(pay.onRequestPost, '/api/pay', { requestId: rid, phone: '0700123456', code: 'skl3xy12ab' });
 assert.equal(r.data.status, 'pending_review'); ok('valid code → pending review');
-r = await post(reqIndex.onRequestPost, '/api/requests', { kind: 'live-in', tasks: [], area: 'Kilimani' });
+r = await post(reqIndex.onRequestPost, '/api/requests', { phone: '0700999888', kind: 'live-in', tasks: [], area: 'Kilimani' });
 const rid2 = r.data.id;
 r = await post(pay.onRequestPost, '/api/pay', { requestId: rid2, phone: '0700123456', code: 'SKL3XY12AB' });
 assert.equal(r.status, 400); ok('M-Pesa code cannot be reused');
@@ -215,5 +215,48 @@ assert.equal(r.data.request.status, 'awaiting_payment'); ok('callback with wrong
 await call(callback.onRequestPost, '/api/mpesa/callback?t=cb-secret', { method: 'POST', body: cbBody(true) }, {}, stkEnv);
 r = await call(reqId.onRequestGet, `/api/requests/${rid2}`, {}, { id: rid2 });
 assert.equal(r.data.unlocked, true); ok('successful callback unlocks contacts');
+
+
+// Distance cap
+r = await post(reqIndex.onRequestPost, '/api/requests', { phone: '0700999888', kind: 'live-in', tasks: [], area: 'Ruiru' });
+assert.equal(r.data.matches, 0); ok('helps more than 15 km away are never suggested (Ruiru gets an empty list, not far-away helps)');
+
+// 11. Free pilot mode (the default when PAYMENT_MODE is unset)
+const freeEnv = { ...env, PAYMENT_MODE: undefined, TILL_NUMBER: undefined };
+r = await call(config.onRequestGet, '/api/config', {}, {}, freeEnv);
+assert.equal(r.data.paymentMode, 'free'); ok('no payment settings → free pilot mode');
+r = await call(config.onRequestGet, '/api/config', {}, {}, { ...env, PAYMENT_MODE: 'manual', TILL_NUMBER: undefined });
+assert.equal(r.data.paymentMode, 'free'); ok('manual mode without a number to pay falls back to free');
+r = await call(config.onRequestGet, '/api/config', {}, {}, { ...env, PAYMENT_MODE: 'manual', TILL_NUMBER: undefined, PAY_TO_TYPE: 'pochi', PAY_TO_NUMBER: '0712345678' });
+assert.equal(r.data.paymentMode, 'manual'); assert.equal(r.data.payToType, 'pochi'); ok('Pochi la Biashara supported');
+
+r = await call(reqIndex.onRequestPost, '/api/requests', { method: 'POST', body: { kind: 'live-in', tasks: [], area: 'Kibera' } }, {}, freeEnv);
+assert.equal(r.status, 400); ok('a request needs a WhatsApp number');
+r = await call(reqIndex.onRequestPost, '/api/requests', { method: 'POST', body: { phone: '0711555444', kind: 'live-out', tasks: ['cooking'], area: 'Rongai' } }, {}, freeEnv);
+const rFree = r.data.id;
+r = await call(reqId.onRequestGet, `/api/requests/${rFree}`, {}, { id: rFree }, freeEnv);
+assert.equal(r.data.request.phone, '0711 555 444');
+r = await call(pay.onRequestPost, '/api/pay', { method: 'POST', body: { requestId: rFree, phone: '0711555444', code: 'ABCDEFGHIJ' } }, {}, freeEnv);
+assert.equal(r.status, 400); ok('no payment possible in free mode; household number saved');
+
+// A help near Rongai is approved later → admin finds matches again, shares contacts
+r = await post(aHelps.onRequestPost, '/api/admin/helps', { name: 'Faith Moraa', phone: '0788111222', area: 'Rongai', kinds: ['live-out'], tasks: ['cooking'] }, ADMIN);
+const faith = r.data.id;
+const before = (await call(reqId.onRequestGet, `/api/requests/${rFree}`, {}, { id: rFree }, freeEnv)).data.helps.length;
+await vetFully(faith); await post(aHelps.onRequestPost, '/api/admin/helps', { id: faith, status: 'approved' }, ADMIN);
+r = await post(aReqs.onRequestPost, '/api/admin/requests', { id: rFree, action: 'refresh_shortlist' }, ADMIN);
+assert.ok(r.data.matches >= 1);
+r = await call(reqId.onRequestGet, `/api/requests/${rFree}`, {}, { id: rFree }, freeEnv);
+assert.equal(r.data.helps[0].name, 'Faith M.'); assert.equal(r.data.unlocked, false);
+ok(`refresh puts the newly approved nearby help first (shortlist had ${before} far-away helps)`);
+r = await post(aReqs.onRequestPost, '/api/admin/requests', { id: rFree, action: 'unlock' }, AGENT);
+assert.equal(r.status, 403); ok('only admin can share contacts');
+r = await post(aReqs.onRequestPost, '/api/admin/requests', { id: rFree, action: 'unlock' }, ADMIN);
+assert.equal(r.status, 200);
+r = await call(reqId.onRequestGet, `/api/requests/${rFree}`, {}, { id: rFree }, freeEnv);
+assert.equal(r.data.unlocked, true); assert.equal(r.data.helps[0].name, 'Faith Moraa'); assert.ok(r.data.helps[0].phone);
+ok('admin shares contacts: household sees full names and numbers');
+r = await post(aReqs.onRequestPost, '/api/admin/requests', { id: rFree, action: 'refresh_shortlist' }, ADMIN);
+assert.equal(r.status, 400); ok('shortlist is frozen once contacts are shared');
 
 console.log(`\nAll ${n} checks passed.`);

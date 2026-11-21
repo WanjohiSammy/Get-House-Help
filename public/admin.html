@@ -164,6 +164,9 @@
         </dl>
         <div class="row section" style="flex-wrap:wrap; gap:8px">
           ${r.status === 'pending_review' ? `<button class="btn small" data-act="confirm_payment">Confirm payment</button><button class="btn small ghost" data-act="reject_payment">Reject code</button>` : ''}
+          ${['open', 'awaiting_payment'].includes(r.status) && r.shortlist.length ? `<button class="btn small" data-act="unlock">Share contacts</button>` : ''}
+          ${['open', 'awaiting_payment', 'pending_review'].includes(r.status) ? `<button class="btn small ghost" data-act="refresh_shortlist">Find matches again</button>` : ''}
+          ${r.phone ? `<a class="btn small ghost" href="${whatsappLink(r.phone, `Habari! This is Jirani. Here are checked house helps near ${r.area} for you: ${location.origin}/shortlist.html?r=${r.id}`)}" target="_blank" rel="noopener">${icons.chat} WhatsApp them</a>` : ''}
           ${r.status === 'paid' && r.shortlist.length ? `<select class="input" style="width:auto; min-height:44px" aria-label="Who was hired">${r.shortlist.map(id => `<option value="${esc(id)}">${esc(names.get(id) || id)}</option>`).join('')}</select><button class="btn small ghost" data-act="mark_hired">Mark hired</button>` : ''}
           ${!['closed', 'hired'].includes(r.status) ? `<button class="link-btn" data-act="close">Close</button>` : ''}
           <a class="link-btn" href="/shortlist.html?r=${encodeURIComponent(r.id)}" target="_blank" rel="noopener">Open shortlist</a>
@@ -173,8 +176,13 @@
     $('#view').querySelectorAll('[data-act]').forEach(btn => btn.addEventListener('click', async () => {
       const card = btn.closest('[data-id]');
       if (btn.dataset.act === 'close' && !confirm('Close this request?')) return;
+      if (btn.dataset.act === 'unlock' && !confirm('Share these helps\' phone numbers with this household?')) return;
       btn.disabled = true;
-      try { await staffApi('/api/admin/requests', { method: 'POST', body: { id: card.dataset.id, action: btn.dataset.act, helpId: card.querySelector('select')?.value } }); renderRequests(); }
+      try {
+        const res = await staffApi('/api/admin/requests', { method: 'POST', body: { id: card.dataset.id, action: btn.dataset.act, helpId: card.querySelector('select')?.value } });
+        if (btn.dataset.act === 'refresh_shortlist') alert(res.matches ? `Found ${res.matches} match${res.matches > 1 ? 'es' : ''}.` : 'Still no approved helps who fit. Approve more helps near this area, then try again.');
+        renderRequests();
+      }
       catch (ex) { alert(ex.message); btn.disabled = false; }
     }));
   }

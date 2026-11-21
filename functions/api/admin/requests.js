@@ -1,4 +1,5 @@
-import { json, bad, readJson, getStaff, now, displayPhone } from '../../../lib/util.js';
+import { json, bad, readJson, getStaff, now, displayPhone, splitList, settings } from '../../../lib/util.js';
+import { findMatches } from '../../../lib/helps.js';
 
 // Payments and household requests: admin only.
 function guard(request, env) {
@@ -18,7 +19,11 @@ export async function onRequestGet({ request, env }) {
   });
 }
 
-// POST /api/admin/requests — { id, action: confirm_payment | reject_payment | mark_hired | close, helpId? }
+// POST /api/admin/requests — { id, action, helpId? }
+//   refresh_shortlist  look for matches again (after you approve new helps)
+//   unlock             share the helps' numbers with the household (free pilot, cash, or paid elsewhere)
+//   confirm_payment / reject_payment   check an M-Pesa code they typed (manual mode)
+//   mark_hired, close
 export async function onRequestPost({ request, env }) {
   const denied = guard(request, env);
   if (denied) return denied;
@@ -28,6 +33,18 @@ export async function onRequestPost({ request, env }) {
 
   const run = (sql, ...args) => env.DB.prepare(sql).bind(...args, r.id).run();
   switch (b.action) {
+    case 'refresh_shortlist': {
+      if (['hired', 'closed'].includes(r.status)) return bad('This request is finished.');
+      if (['paid'].includes(r.status)) return bad('Contacts were already shared for this shortlist.');
+      const matches = await findMatches(env.DB, { kind: r.kind, tasks: splitList(r.tasks), area: r.area, lat: r.lat, lng: r.lng }, { maxKm: settings(env).maxKm });
+      await run('UPDATE requests SET shortlist = ? WHERE id = ?', JSON.stringify(matches.map(h => h.id)));
+      return json({ ok: true, matches: matches.length });
+    }
+    case 'unlock':
+      if (!['open', 'pending_review', 'awaiting_payment'].includes(r.status)) return bad('Contacts are already shared or the request is closed.');
+      if (r.shortlist === '[]') return bad('Find matches first: the shortlist is empty.');
+      await run("UPDATE requests SET status = 'paid', amount = COALESCE(amount, 0), paid_at = ? WHERE id = ?", now());
+      break;
     case 'confirm_payment':
       if (r.status !== 'pending_review') return bad('Nothing to confirm.');
       await run("UPDATE requests SET status = 'paid', paid_at = ? WHERE id = ?", now());
