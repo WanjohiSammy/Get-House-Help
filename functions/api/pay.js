@@ -32,7 +32,7 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const checkoutId = await stkPush(env, {
-      phone, amount: s.matchFee, origin: new URL(request.url).origin, reference: 'JIRANI'
+      phone, amount: s.matchFee, origin: new URL(request.url).origin, reference: 'MTAACARE'
     });
     await env.DB.prepare(
       "UPDATE requests SET phone = ?, checkout_id = ?, status = 'awaiting_payment' WHERE id = ?"

@@ -1,6 +1,11 @@
-# Jirani — trusted house help from next door
+# MtaaCare — trusted help. Right around the corner.
 
-Jirani helps Nairobi families find a **checked house help who lives nearby**, and helps house helps find **fair work close to home**. You run it from a simple staff portal.
+MtaaCare helps families **find verified household help near their home**, and helps house helps **get discovered by households in their neighbourhood**. Vetted helpers, local connections, simple and free to join, for households and helpers across Kenya. It starts in Nairobi, and you run it from a simple staff portal.
+
+**Positioning**
+- **Households:** find trusted, verified help near you.
+- **House helps:** get discovered by households in your neighbourhood. Join for free.
+- **Trust promise:** every listed helper goes through MtaaCare's verification: ID, Certificate of Good Conduct, two past employers, and a meeting in person.
 
 - **Households** tell you what they need in one screen and see up to 3 checked helps who live close by. They never create an account; their WhatsApp number is enough.
 - **House helps** join free from their phone, in Kiswahili or English, or through you on WhatsApp.
@@ -76,7 +81,7 @@ They call and interview ──► you mark who was hired ──► check in afte
 ## 3. Run it on your computer
 
 1. Install **Node.js 22.5 or newer**, the LTS from [nodejs.org](https://nodejs.org). Check with `node --version`.
-2. Open a terminal **inside the `jirani-app` folder** and run:
+2. Open a terminal **inside the `mtaacare-app` folder** and run:
    ```bash
    npm start                      # same as: node tests/local-server.mjs
    ```
@@ -102,7 +107,7 @@ Everything resets when you stop the server with Ctrl+C. Problems? See [Troublesh
 
 ### Step by step (about 20 minutes)
 
-**1. Log in to Cloudflare from your terminal.** Inside `jirani-app`:
+**1. Log in to Cloudflare from your terminal.** Inside `mtaacare-app`:
 ```bash
 npx wrangler login
 ```
@@ -110,7 +115,7 @@ A browser opens. Approve, then come back to the terminal.
 
 **2. Create the database.**
 ```bash
-npx wrangler d1 create jirani
+npx wrangler d1 create mtaacare
 ```
 It prints a `database_id`. Paste it into `wrangler.toml`, replacing `PASTE-YOUR-D1-DATABASE-ID-HERE`.
 
@@ -127,15 +132,15 @@ Leave `PAYMENT_MODE = "free"`. You don't need any payment details yet.
 
 **5. Create the site.**
 ```bash
-npx wrangler pages project create jirani --production-branch main
+npx wrangler pages project create mtaacare --production-branch main
 ```
-If the name `jirani` is taken, pick another (e.g. `jirani-ke`) and use it in the next steps.
+If the name `mtaacare` is taken, pick another (e.g. `mtaacare-ke`) and use it in the next steps.
 
 **6. Deploy.**
 ```bash
 npm run deploy
 ```
-It prints your address, e.g. `https://jirani.pages.dev`. The script deploys with `--branch main`, so it always updates the live address, not a preview copy.
+It prints your address, e.g. `https://mtaacare.pages.dev`. The script deploys with `--branch main`, so it always updates the live address, not a preview copy.
 
 **7. Set your staff password**, then deploy once more so it takes effect:
 ```bash
@@ -157,11 +162,11 @@ Keep this password somewhere safe. To make a strong one, run `node -e "console.l
 ```bash
 git push -u origin main     # the project is already connected to github.com/WanjohiSammy/Get-House-Help
 ```
-To deploy automatically on every push instead of running `npm run deploy`, go to Cloudflare → Workers & Pages → Create → Pages → Connect to Git. Leave the build command empty, set the output directory to `public`, then under Settings add the D1 binding (`DB` → `jirani`), the variables, and the `ADMIN_TOKEN` secret.
+To deploy automatically on every push instead of running `npm run deploy`, go to Cloudflare → Workers & Pages → Create → Pages → Connect to Git. Leave the build command empty, set the output directory to `public`, then under Settings add the D1 binding (`DB` → `mtaacare`), the variables, and the `ADMIN_TOKEN` secret.
 
 ### Updating the live site later
 
-Change files, run `npm test`, then `npm run deploy`. Database changes come with a file in `migrations/`. Run it once with `npx wrangler d1 execute jirani --remote --file=migrations/<file>.sql`.
+Change files, run `npm test`, then `npm run deploy`. Database changes come with a file in `migrations/`. Run it once with `npx wrangler d1 execute mtaacare --remote --file=migrations/<file>.sql`.
 
 ## 5. Your first month: launching with no data
 
@@ -198,7 +203,7 @@ Set these in `wrangler.toml` under `[vars]`, then run `npm run deploy`.
 | `SUCCESS_FEE` | `2500` | KES you ask for when they hire (shown to households) |
 | `PAY_TO_TYPE` | `pochi` | `till`, `pochi` or `phone` (manual mode) |
 | `PAY_TO_NUMBER` | empty | Where households pay. **Manual mode stays free until this is set** |
-| `PAY_TO_NAME` | `Jirani` | The name M-Pesa shows them |
+| `PAY_TO_NAME` | `MtaaCare` | The name M-Pesa shows them |
 | `WHATSAPP_NUMBER` | empty | Your WhatsApp, `2547…`. Empty hides the "Message us" buttons |
 | `ADMIN_NAME` | `Admin` | Your name in the vetting history |
 | `MIN_WAGE` | `18047` | Shown to households on every profile (KES/month, Nairobi and the other major towns) |
@@ -284,9 +289,9 @@ Open `/admin.html` and log in with `ADMIN_TOKEN`.
 | New household request | Portal → **Requests** → **WhatsApp them** → **Share contacts** |
 | Request with no matches | Find and vet a help nearby → approve → **Find matches again** → **Share contacts** |
 | Someone was hired | **Requests** → choose her → **Mark hired**; set the help to "Hired / away" so she stops appearing |
-| Back up the database | `npx wrangler d1 export jirani --remote --output=backup-$(date +%F).sql` (weekly) |
+| Back up the database | `npx wrangler d1 export mtaacare --remote --output=backup-$(date +%F).sql` (weekly) |
 | Add an area | Add a line in `lib/areas.js` → `npm test` → `npm run deploy` |
-| Custom domain (e.g. jirani.co.ke) | Buy it from a Kenyan registrar → Cloudflare → your Pages project → Custom domains |
+| Custom domain (e.g. mtaacare.co.ke) | Buy it from a Kenyan registrar → Cloudflare → your Pages project → Custom domains |
 
 Cloudflare's free plan easily covers a pilot. Check current limits on Cloudflare's pricing page if traffic grows.
 
@@ -294,9 +299,9 @@ Cloudflare's free plan easily covers a pilot. Check current limits on Cloudflare
 
 | You see | Fix |
 | --- | --- |
-| "Jirani needs Node.js 22.5 or newer" | Install the LTS from nodejs.org, then open a **new** terminal |
-| A page saying "Start the Jirani server first" | You opened an HTML file directly. Run `npm start` and use the localhost address |
-| `Cannot find module …/tests/local-server.mjs` | Your terminal isn't in the `jirani-app` folder. `cd` into it first |
+| "MtaaCare needs Node.js 22.5 or newer" | Install the LTS from nodejs.org, then open a **new** terminal |
+| A page saying "Start the MtaaCare server first" | You opened an HTML file directly. Run `npm start` and use the localhost address |
+| `Cannot find module …/tests/local-server.mjs` | Your terminal isn't in the `mtaacare-app` folder. `cd` into it first |
 | Fonts look plain on your computer | Normal when offline; Google Fonts loads when you're online |
 | Staff portal says "That token is not valid" (live site) | Set `ADMIN_TOKEN` with `npx wrangler pages secret put ADMIN_TOKEN`, then `npm run deploy` again |
 | "no such table: helps" | Run `npm run db:init` (live) or `npm run dev:setup` (on your computer with `npm run dev`) |

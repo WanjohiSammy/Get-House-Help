@@ -1,4 +1,4 @@
--- Demo data for trying Jirani on your computer. Safe to run more than once.
+-- Demo data for trying MtaaCare on your computer. Safe to run more than once.
 -- Never run this on your live database.
 INSERT OR IGNORE INTO helps (id,name,phone,area,lat,lng,kinds,tasks,years,languages,salary,about,id_verified,good_conduct,refs_called,interviewed,certified,status,added_by,created_at,updated_at) VALUES
  ('g1','Grace Akinyi','254712345678','Kawangware',-1.284,36.751,'live-in,live-out','cleaning,cooking,children,baby',7,'Kiswahili, English, Dholuo',19000,'I have looked after children from newborn to school age for seven years. I cook Kenyan and simple continental meals.',1,1,1,1,1,'approved','Admin','2026-11-19T08:00:00Z','2026-11-19T08:00:00Z'),

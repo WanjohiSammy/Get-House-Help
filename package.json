@@ -1,14 +1,14 @@
 {
-  "name": "jirani",
+  "name": "mtaacare",
   "private": true,
   "type": "module",
   "engines": { "node": ">=22.5" },
   "scripts": {
     "start": "node tests/local-server.mjs",
     "test": "node tests/api.test.mjs",
-    "dev:setup": "npx wrangler d1 execute jirani --local --file=schema.sql && npx wrangler d1 execute jirani --local --file=seed.sql",
+    "dev:setup": "npx wrangler d1 execute mtaacare --local --file=schema.sql && npx wrangler d1 execute mtaacare --local --file=seed.sql",
     "dev": "npx wrangler pages dev",
-    "db:init": "npx wrangler d1 execute jirani --remote --file=schema.sql",
+    "db:init": "npx wrangler d1 execute mtaacare --remote --file=schema.sql",
     "deploy": "npx wrangler pages deploy --branch main"
   }
 }

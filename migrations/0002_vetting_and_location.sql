@@ -1,5 +1,5 @@
 -- Only for a database created with the first version of schema.sql.
--- Run once: npx wrangler d1 execute jirani --remote --file=migrations/0002_vetting_and_location.sql
+-- Run once: npx wrangler d1 execute mtaacare --remote --file=migrations/0002_vetting_and_location.sql
 ALTER TABLE helps ADD COLUMN lat REAL;
 ALTER TABLE helps ADD COLUMN lng REAL;
 ALTER TABLE helps ADD COLUMN added_by TEXT NOT NULL DEFAULT 'self';

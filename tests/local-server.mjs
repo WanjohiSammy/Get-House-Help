@@ -1,4 +1,4 @@
-// Run Jirani on your computer with no installs:   node tests/local-server.mjs   (or: npm start)
+// Run MtaaCare on your computer with no installs:   node tests/local-server.mjs   (or: npm start)
 // Needs Node.js 22.5 or newer. Serves the site and the API with demo data held in memory.
 // Everything resets when you stop it (Ctrl+C).
 import { readFileSync, existsSync, statSync } from 'node:fs';
@@ -78,7 +78,7 @@ server.on('error', e => {
 });
 server.on('listening', () => {
   const base = `http://localhost:${port}`;
-  console.log(`\n  Jirani is running.\n`);
+  console.log(`\n  MtaaCare is running.\n`);
   console.log(`  Households:  ${base}/`);
   console.log(`  Helps join:  ${base}/join.html`);
   console.log(`  Staff:       ${base}/admin.html`);

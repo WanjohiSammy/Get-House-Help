@@ -60,7 +60,7 @@ export function whatsappLink(number, text = '') {
 }
 
 // Remember the household's shortlists on this phone so they can come back without an account.
-const KEY = 'jirani.requests';
+const KEY = 'mtaacare.requests';
 export function rememberRequest(id) {
   try {
     const list = JSON.parse(localStorage.getItem(KEY) || '[]').filter(x => x !== id);
@@ -110,7 +110,7 @@ export function nearestAreaName(point, areaPoints) {
   return best;
 }
 
-// "Till 123456 (Jirani)" etc., from /api/config.
+// "Till 123456 (MtaaCare)" etc., from /api/config.
 export function payToText(cfg) {
   const n = cfg.payToNumber || '—';
   if (cfg.payToType === 'till') return { where: `Till ${n}`, steps: ['Open M-Pesa, choose <b>Lipa na M-Pesa</b> then <b>Buy Goods</b>', `Till number <b style="font-size:17px">${esc(n)}</b> (${esc(cfg.payToName)})`] };

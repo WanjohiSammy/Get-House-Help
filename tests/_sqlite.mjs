@@ -1,4 +1,4 @@
-// Opens Node's built-in SQLite as a stand-in for Cloudflare D1, so you can run Jirani with no installs.
+// Opens Node's built-in SQLite as a stand-in for Cloudflare D1, so you can run MtaaCare with no installs.
 // Node 22.13+ and 23.4+ have it built in. Node 22.5–22.12 need a flag, so we restart with it.
 // Older Node versions get a clear message.
 import { fileURLToPath } from 'node:url';
@@ -19,7 +19,7 @@ export async function loadSqlite(callerUrl) {
       const r = spawnSync(process.execPath, ['--experimental-sqlite', '--no-warnings', fileURLToPath(callerUrl), ...process.argv.slice(2)], { stdio: 'inherit' });
       process.exit(r.status ?? 1);
     }
-    console.error(`\nJirani needs Node.js 22.5 or newer to run on your computer. You have ${process.version}.`);
+    console.error(`\nMtaaCare needs Node.js 22.5 or newer to run on your computer. You have ${process.version}.`);
     console.error('Install the LTS version from https://nodejs.org, open a new terminal, and run this again.\n');
     process.exit(1);
   }

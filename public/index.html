@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2D2A7A">
-<meta name="description" content="Find a checked house help who lives near you in Nairobi. No sign-up, pay with M-Pesa.">
-<title>Jirani — trusted house help from next door</title>
+<meta name="description" content="Find verified household help near your home. Vetted helpers, local connections. Free to join, for households and helpers across Kenya.">
+<title>MtaaCare — trusted help, right around the corner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
@@ -15,19 +15,19 @@
   // Opened by double-clicking the file? These pages need the local server.
   if (location.protocol === 'file:') document.addEventListener('DOMContentLoaded', function () {
     document.body.innerHTML = '<main style="font-family:system-ui,sans-serif;max-width:520px;margin:40px auto;padding:0 20px;line-height:1.5;color:#1C1B2E">' +
-      '<h1 style="font-size:24px">Start the Jirani server first</h1>' +
-      '<p>You opened this page as a file. It needs the app running. In a terminal, inside the <b>jirani-app</b> folder, run:</p>' +
+      '<h1 style="font-size:24px">Start the MtaaCare server first</h1>' +
+      '<p>You opened this page as a file. It needs the app running. In a terminal, inside the <b>mtaacare-app</b> folder, run:</p>' +
       '<pre style="background:#F1EBE0;padding:12px 14px;border-radius:10px;font-size:15px">node tests/local-server.mjs</pre>' +
       '<p>Then open <b>http://localhost:8788</b> in your browser.</p></main>';
   });
 </script>
 <main class="page">
   <div class="topbar" style="margin-left:0; justify-content: space-between">
-    <a class="brand" href="/"><span class="brand-mark" id="mark"></span>Jirani</a>
+    <a class="brand" href="/"><span class="brand-mark" id="mark"></span>MtaaCare</a>
   </div>
 
-  <h1 class="hero">Find a house help<br>you can trust</h1>
-  <p class="lead">Trusted help from next door. Checked helps who live near you, no sign-up needed.</p>
+  <h1 class="hero">Trusted help.<br>Right around the corner.</h1>
+  <p class="lead">Find verified household help near your home. Every helper is checked in person by our team.</p>
 
   <div id="mine"></div>
 
@@ -57,7 +57,8 @@
   <div class="spacer"></div>
   <div class="stack section center">
     <a class="btn ghost" id="chat" href="#"><span id="chat-ic"></span>Rather chat? Message us</a>
-    <a class="link-btn" style="justify-content:center" href="/join.html">Looking for work? Join as a help</a>
+    <a class="link-btn" style="justify-content:center" href="/join.html">Looking for work? Get discovered by households near you</a>
+    <p class="small center" style="margin:4px 0 0">Vetted helpers. Local connections. Free to join.<br>For households and helpers across Kenya.</p>
   </div>
 </main>
 <script type="module">
@@ -73,7 +74,7 @@
       <span style="flex:1"><strong>Your shortlist</strong><span style="font-size:13px">Pick up where you left off</span></span>${icons.chevron}</a>`;
   }
   getConfig().then(c => {
-    if (c.whatsapp) $('#chat').href = whatsappLink(c.whatsapp, 'Hi Jirani, I need a house help.');
+    if (c.whatsapp) $('#chat').href = whatsappLink(c.whatsapp, 'Hi MtaaCare, I need a house help.');
     else $('#chat').hidden = true;
   }).catch(() => { $('#chat').hidden = true; });
 </script>

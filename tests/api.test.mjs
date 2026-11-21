@@ -29,7 +29,7 @@ const aVet = await load('admin/vetting.js');
 const aMe = await load('admin/me.js');
 const aReqs = await load('admin/requests.js');
 
-const BASE = 'https://jirani.pages.dev';
+const BASE = 'https://mtaacare.pages.dev';
 const mk = (path, { method = 'GET', body, token } = {}) => new Request(BASE + path, {
   method, body: body ? JSON.stringify(body) : undefined,
   headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) }

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2D2A7A">
 <meta name="robots" content="noindex">
-<title>Your shortlist — Jirani</title>
+<title>Your shortlist — MtaaCare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
@@ -15,8 +15,8 @@
   // Opened by double-clicking the file? These pages need the local server.
   if (location.protocol === 'file:') document.addEventListener('DOMContentLoaded', function () {
     document.body.innerHTML = '<main style="font-family:system-ui,sans-serif;max-width:520px;margin:40px auto;padding:0 20px;line-height:1.5;color:#1C1B2E">' +
-      '<h1 style="font-size:24px">Start the Jirani server first</h1>' +
-      '<p>You opened this page as a file. It needs the app running. In a terminal, inside the <b>jirani-app</b> folder, run:</p>' +
+      '<h1 style="font-size:24px">Start the MtaaCare server first</h1>' +
+      '<p>You opened this page as a file. It needs the app running. In a terminal, inside the <b>mtaacare-app</b> folder, run:</p>' +
       '<pre style="background:#F1EBE0;padding:12px 14px;border-radius:10px;font-size:15px">node tests/local-server.mjs</pre>' +
       '<p>Then open <b>http://localhost:8788</b> in your browser.</p></main>';
   });
@@ -48,7 +48,7 @@
     const contact = unlocked ? `
       <div class="contact">
         <a class="btn small" href="tel:+${esc(h.phoneIntl)}">${icons.phone} ${esc(h.phone)}</a>
-        <a class="btn small ghost" href="${whatsappLink(h.phoneIntl, 'Habari ' + h.name.split(' ')[0] + ', nimepata nambari yako kupitia Jirani.')}" target="_blank" rel="noopener">${icons.chat} WhatsApp</a>
+        <a class="btn small ghost" href="${whatsappLink(h.phoneIntl, 'Habari ' + h.name.split(' ')[0] + ', nimepata nambari yako kupitia MtaaCare.')}" target="_blank" rel="noopener">${icons.chat} WhatsApp</a>
       </div>` : '';
     return `
       <div class="card ${i === 0 ? 'help-card top' : 'help-card'}">
@@ -96,14 +96,14 @@
 
     if (!helps.length) {
       $('#list').innerHTML = `<div class="card empty">We're still checking helps near ${esc(r.area)}. We'll find someone for you and WhatsApp you on ${esc(r.phone)} within 2 days.
-        ${cfg.whatsapp ? `<p><a class="btn ghost" href="${whatsappLink(cfg.whatsapp, 'Hi, my Jirani request is ' + rid)}">${icons.chat} Message us</a></p>` : ''}</div>`;
+        ${cfg.whatsapp ? `<p><a class="btn ghost" href="${whatsappLink(cfg.whatsapp, 'Hi, my MtaaCare request is ' + rid)}">${icons.chat} Message us</a></p>` : ''}</div>`;
       $('#cta').innerHTML = '';
       return;
     }
 
     $('#list').innerHTML = helps.map((h, i) => card(h, i, unlocked, cfg)).join('');
     $('#cta').innerHTML = unlocked || r.status === 'pending_review' || r.status === 'awaiting_payment' ? ''
-      : free ? (cfg.whatsapp ? `<div class="sticky-cta"><a class="btn ghost" href="${whatsappLink(cfg.whatsapp, 'Hi Jirani, my request is ' + rid)}">${icons.chat} Questions? Message us</a></div>` : '')
+      : free ? (cfg.whatsapp ? `<div class="sticky-cta"><a class="btn ghost" href="${whatsappLink(cfg.whatsapp, 'Hi MtaaCare, my request is ' + rid)}">${icons.chat} Questions? Message us</a></div>` : '')
       : `
       <div class="sticky-cta">
         <a class="btn" href="/pay.html?r=${encodeURIComponent(rid)}">Get their numbers · ${money(cfg.matchFee)}</a>

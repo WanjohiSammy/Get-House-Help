@@ -1,4 +1,4 @@
--- Jirani database (Cloudflare D1 / SQLite). Run once on a new database: npm run db:init
+-- MtaaCare database (Cloudflare D1 / SQLite). Run once on a new database: npm run db:init
 
 CREATE TABLE IF NOT EXISTS helps (
   id            TEXT PRIMARY KEY,
