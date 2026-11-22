@@ -139,7 +139,7 @@ textarea.input { min-height: 96px; resize: vertical; }
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
 .tabs button { height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid var(--line); background: var(--card); font-weight: 600; cursor: pointer; }
 .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 12px; }
 .kv { display: grid; grid-template-columns: 110px 1fr; gap: 4px 10px; font-size: 13px; }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; overflow-wrap: anywhere; }
@@ -207,3 +207,60 @@ textarea.input { min-height: 96px; resize: vertical; }
 .how b { display: block; font-size: 15px; }
 .how span.small { display: block; }
 .section-title { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 12px; }
+
+
+/* ---------- Layout pieces shared by mobile and desktop ---------- */
+.top-links { display: none; gap: 6px; }
+.top-links a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 22px; font-weight: 700; font-size: 15px; color: var(--ink); }
+.top-links a:hover { background: var(--brand-tint); color: var(--brand-dark); }
+.options { display: flex; flex-direction: column; gap: 10px; }
+.footer { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.helper-grid .col { display: flex; flex-direction: column; }
+.helper-grid .col > .card + .card, .helper-grid .col > .card + .banner { margin-top: 16px; }
+.profile-head { padding: 22px 16px; }
+.helper-grid .col:last-child > :first-child { margin-top: 16px; }
+
+/* ---------- Big screens: use the width ---------- */
+@media (min-width: 900px) {
+  .page { max-width: 1180px; padding: 0 40px 56px; }
+  .page.narrow { max-width: 760px; }
+  .page.join { max-width: 880px; }
+  .page.wide { max-width: 1280px; }
+  .topbar { padding-top: 22px; padding-bottom: 12px; }
+  .top-links { display: flex; }
+
+  /* Home */
+  .home .hero-panel { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: end; gap: 24px; padding: 0 0 0 56px; min-height: 440px; }
+  .home .hero-copy { padding: 56px 0; }
+  .home .hero { font-size: 60px; line-height: 1.04; }
+  .home .hero-panel .lead { font-size: 18px; max-width: 460px; }
+  .home .hero-actions { flex-direction: row; }
+  .home .hero-actions .btn { width: auto; padding: 0 28px; }
+  .home .hero-panel .skyline { width: 100%; height: 300px; margin: 0; align-self: end; }
+  .trust { gap: 16px; }
+  .trust div { flex-direction: row; align-items: center; gap: 12px; padding: 18px 20px; font-size: 15px; }
+  .options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .home .how { flex-direction: row; gap: 24px; }
+  .home .how li { flex: 1; }
+  .home .section { margin-top: 32px; }
+  .footer { flex-direction: row; justify-content: space-between; }
+  .footer .btn { width: auto; padding: 0 24px; }
+  .footer p { text-align: right; }
+
+  /* Find a helper: two columns of question cards */
+  .find form.stack { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .find .error-text, .find .sticky-cta, .find .step-card.full { grid-column: 1 / -1; }
+  .sticky-cta { position: static; padding-top: 8px; }
+  .find .sticky-cta { width: 100%; max-width: 520px; margin: 4px auto 0; background: none; }
+
+  /* Matches: side by side */
+  .matches #list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+  .matches #list > .empty { grid-column: 1 / -1; }
+  .matches .spacer, .helper .spacer { display: none; }
+  .matches #cta .sticky-cta { max-width: 520px; margin: 20px auto 0; background: none; }
+
+  /* Helper profile: two columns */
+  .helper .helper-grid { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 20px; align-items: start; }
+  .helper .helper-grid .col:last-child > :first-child { margin-top: 0; }
+  .helper .sticky-cta { max-width: 520px; margin: 20px auto 0; background: none; }
+}

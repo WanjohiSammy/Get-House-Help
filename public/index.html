@@ -15,26 +15,32 @@
 <script>
   // Opened by double-clicking the file? These pages need the local server.
   if (location.protocol === 'file:') document.addEventListener('DOMContentLoaded', function () {
-    document.body.innerHTML = '<main style="font-family:system-ui,sans-serif;max-width:520px;margin:40px auto;padding:0 20px;line-height:1.5;color:#24173A">' +
+    document.body.innerHTML = '<div style="font-family:system-ui,sans-serif;max-width:520px;margin:40px auto;padding:0 20px;line-height:1.5;color:#24173A">' +
       '<h1 style="font-size:24px">Start the MtaaCare server first</h1>' +
       '<p>You opened this page as a file. It needs the app running. In a terminal, inside the <b>mtaacare-app</b> folder, run:</p>' +
-      '<pre style="background:#F7EFF3;padding:12px 14px;border-radius:10px;font-size:15px">node tests/local-server.mjs</pre>' +
-      '<p>Then open <b>http://localhost:8788</b> in your browser.</p></main>';
+      '<pre style="background:#F7EFF3;padding:12px 14px;border-radius:10px;font-size:15px">npm start</pre>' +
+      '<p>Then open <b>http://localhost:8788</b> in your browser.</p></div>';
   });
 </script>
-<main class="page">
-  <div class="topbar" style="margin-left:0; justify-content: space-between">
+<main class="page home">
+  <header class="topbar" style="margin-left:0; justify-content: space-between">
     <a class="brand" href="/" aria-label="MtaaCare home"><span class="brand-mark" id="mark"></span><span>Mtaa<span class="brand-care">Care</span></span></a>
-  </div>
+    <nav class="top-links" aria-label="Main">
+      <a href="/find">Find a helper</a>
+      <a href="/join">Find work</a>
+    </nav>
+  </header>
 
   <section class="hero-panel">
-    <h1 class="hero">Trusted help.<br>Right around the corner.</h1>
-    <p class="lead">Find verified household help near your home. Every helper is checked in person by our team.</p>
-    <div class="hero-actions">
-      <a class="btn light" href="/find">Find a helper near me</a>
-      <a class="btn outline-light" href="/join">I'm looking for work</a>
+    <div class="hero-copy">
+      <h1 class="hero">Trusted help.<br>Right around the corner.</h1>
+      <p class="lead">Find verified household help near your home. Every helper is checked in person by our team.</p>
+      <div class="hero-actions">
+        <a class="btn light" href="/find">Find a helper near me</a>
+        <a class="btn outline-light" href="/join">I'm looking for work</a>
+      </div>
     </div>
-    <svg class="skyline" viewBox="0 0 360 74" aria-hidden="true">
+    <svg class="skyline" viewBox="0 0 360 74" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
       <path fill="#FFFFFF" fill-opacity="0.16" d="M0 74V46l24-17 24 17v28zM54 74V36l28-21 28 21v38zM116 74V50l19-14 19 14v24zM160 74V30l32-23 32 23v44zM230 74V46l21-15 21 15v28zM278 74V38l26-19 26 19v36zM336 74V52l12-9 12 9v22z"/>
       <rect x="74" y="44" width="9" height="9" rx="2" fill="#FFC35C"/><rect x="186" y="40" width="10" height="10" rx="2" fill="#FFC35C"/>
       <rect x="296" y="48" width="9" height="9" rx="2" fill="#F2685A"/><rect x="18" y="54" width="8" height="8" rx="2" fill="#F2685A"/>
@@ -47,15 +53,15 @@
   <section class="section" aria-labelledby="trust-title">
     <h2 class="sr-only" id="trust-title">How we check every helper</h2>
     <div class="trust">
-      <div><span class="ic" id="ic-id"></span>National ID checked</div>
-      <div><span class="ic" id="ic-ref"></span>Past employers called</div>
-      <div><span class="ic" id="ic-met"></span>Met in person</div>
+      <div><span class="ic" id="ic-id"></span><span>National ID checked</span></div>
+      <div><span class="ic" id="ic-ref"></span><span>Past employers called</span></div>
+      <div><span class="ic" id="ic-met"></span><span>Met in person</span></div>
     </div>
   </section>
 
   <section class="section" aria-labelledby="need-title">
     <h2 class="section-title" id="need-title">What do you need?</h2>
-    <div class="stack">
+    <div class="options">
       <a class="card option" href="/find?kind=live-in">
         <span class="tile"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><circle cx="12" cy="14" r="2"/></svg></span>
         <span class="grow"><strong>Live-in help</strong><span class="small">Stays with your family</span></span>
@@ -88,59 +94,10 @@
     <div><strong>Free replacement for 30 days</strong><span style="font-size:13px">If it doesn't work out, we find you someone new at no cost.</span></div>
   </div>
 
-  <div class="stack section center">
+  <footer class="footer section">
     <a class="btn ghost" id="chat" href="#"><span id="chat-ic"></span>Rather chat? Message us</a>
-    <p class="small center" style="margin:8px 0 0">Vetted helpers. Local connections. Free to join.<br>For households and helpers across Kenya.</p>
-  </div>
-</main>
-</script>
-<main class="page">
-  <div class="topbar" style="margin-left:0; justify-content: space-between">
-    <a class="brand" href="/" aria-label="MtaaCare home"><span class="brand-mark" id="mark"></span><span>Mtaa<span class="brand-care">Care</span></span></a>
-  </div>
-
-  <section class="hero-panel">
-    <h1 class="hero">Trusted help.<br>Right around the corner.</h1>
-    <p class="lead">Find verified household help near your home. Every helper is checked in person by our team.</p>
-    <svg class="skyline" viewBox="0 0 360 74" aria-hidden="true">
-      <path fill="#FFFFFF" fill-opacity="0.16" d="M0 74V46l24-17 24 17v28zM54 74V36l28-21 28 21v38zM116 74V50l19-14 19 14v24zM160 74V30l32-23 32 23v44zM230 74V46l21-15 21 15v28zM278 74V38l26-19 26 19v36zM336 74V52l12-9 12 9v22z"/>
-      <rect x="74" y="44" width="9" height="9" rx="2" fill="#FFC35C"/><rect x="186" y="40" width="10" height="10" rx="2" fill="#FFC35C"/>
-      <rect x="296" y="48" width="9" height="9" rx="2" fill="#F2685A"/><rect x="18" y="54" width="8" height="8" rx="2" fill="#F2685A"/>
-      <rect x="244" y="54" width="8" height="8" rx="2" fill="#FFC35C"/><rect x="130" y="56" width="8" height="8" rx="2" fill="#FFFFFF"/>
-    </svg>
-  </section>
-
-  <div id="mine"></div>
-
-  <div class="stack section">
-    <a class="card option" href="/find?kind=live-in">
-      <span class="tile"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><circle cx="12" cy="14" r="2"/></svg></span>
-      <span class="grow"><strong>Live-in help</strong><span class="small">Stays with your family</span></span>
-      <span class="chev"></span>
-    </a>
-    <a class="card option" href="/find?kind=live-out">
-      <span class="tile"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>
-      <span class="grow"><strong>Live-out help</strong><span class="small">Comes daily, lives nearby</span></span>
-      <span class="chev"></span>
-    </a>
-    <a class="card option" href="/find?kind=day">
-      <span class="tile"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span>
-      <span class="grow"><strong>Day help</strong><span class="small">Cleaning or laundry, by the day</span></span>
-      <span class="chev"></span>
-    </a>
-  </div>
-
-  <div class="banner gold section">
-    <span id="shield"></span>
-    <div><strong>Free replacement for 30 days</strong><span style="font-size:13px">If it doesn't work out, we find you someone new at no cost.</span></div>
-  </div>
-
-  <div class="spacer"></div>
-  <div class="stack section center">
-    <a class="btn ghost" id="chat" href="#"><span id="chat-ic"></span>Rather chat? Message us</a>
-    <a class="link-btn" style="justify-content:center" href="/join">Looking for work? Get discovered by households near you</a>
-    <p class="small center" style="margin:4px 0 0">Vetted helpers. Local connections. Free to join.<br>For households and helpers across Kenya.</p>
-  </div>
+    <p class="small center" style="margin:0">Vetted helpers. Local connections. Free to join.<br>For households and helpers across Kenya.</p>
+  </footer>
 </main>
 <script type="module">
   import { icons, getConfig, whatsappLink, rememberedRequests, $ } from '/app.js';

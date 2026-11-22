@@ -22,7 +22,7 @@
       '<p>Then open <b>http://localhost:8788</b> in your browser.</p></main>';
   });
 </script>
-<main class="page">
+<main class="page helper">
   <div class="topbar"><a class="icon-btn" id="back" aria-label="Back to shortlist"></a></div>
   <div id="body"><div class="empty"><span class="spinner" style="margin:0 auto"></span></div></div>
 </main>
@@ -47,7 +47,9 @@
       : 'Salary to agree at the interview.';
 
     $('#body').innerHTML = `
-      <div class="center" style="display:flex; flex-direction:column; align-items:center">
+      <div class="helper-grid">
+      <div class="col">
+      <div class="center card profile-head" style="display:flex; flex-direction:column; align-items:center">
         <span class="avatar big ${avatarClass(h.id)}">${esc(initials(h.name))}</span>
         <h1 style="margin:12px 0 0; font-size:24px; letter-spacing:-0.02em">${esc(h.name)}</h1>
         <p class="small" style="margin:4px 0 0">${h.kinds.map(label).join(' · ')}${h.tasks.length ? ' · ' + h.tasks.map(label).join(', ').toLowerCase() : ''}</p>
@@ -58,6 +60,8 @@
         <p class="kicker">What we checked</p>
         <ul class="checklist">${checks}</ul>
       </div>
+      </div>
+      <div class="col">
 
       ${h.about ? `<div class="card section"><p class="kicker">About</p><p style="margin:0">${esc(h.about)}</p></div>` : ''}
 
@@ -70,13 +74,15 @@
       </div>
 
       <div class="banner cream section"><div><strong>${salaryNote}</strong><span style="font-size:13px">The legal minimum for domestic workers in Nairobi is ${money(cfg.minWage)} a month.</span></div></div>
+      </div>
+      </div>
 
       <div class="sticky-cta">
         ${h.phone
           ? `<a class="btn" href="tel:+${esc(h.phoneIntl)}">${icons.phone} Call ${esc(h.name.split(' ')[0])}</a>`
           : rid && cfg.paymentMode === 'free' ? `<a class="btn" href="/m/${encodeURIComponent(rid)}">Back to your matches</a>`
           : rid ? `<a class="btn" href="/pay/${encodeURIComponent(rid)}">Book interview · ${money(cfg.matchFee)}</a>`
-                : `<a class="btn" href="/find">Find helps near you</a>`}
+                : `<a class="btn" href="/find">Find helpers near you</a>`}
       </div>`;
   } catch (e) {
     $('#body').innerHTML = `<div class="empty">${esc(e.message)}<p><a href="${back}">Go back</a></p></div>`;
