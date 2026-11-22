@@ -6,7 +6,7 @@ compatibility_date = "2026-11-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "mtaacare"
-database_id = "PASTE-YOUR-D1-DATABASE-ID-HERE"   # printed by: npx wrangler d1 create mtaacare
+database_id = "4c19ce3a-8ba4-403a-b321-b00101097b55"
 
 [vars]
 # How households pay. Start with "free" (no fees; you share contacts from /admin).

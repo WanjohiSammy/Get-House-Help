@@ -2,13 +2,29 @@
   "name": "mtaacare",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.5" },
+  "description": "Find verified household help near home in Kenya. Cloudflare Pages + Pages Functions + D1.",
+  "engines": {
+    "node": ">=22.5"
+  },
   "scripts": {
     "start": "node tests/local-server.mjs",
     "test": "node tests/api.test.mjs",
-    "dev:setup": "npx wrangler d1 execute mtaacare --local --file=schema.sql && npx wrangler d1 execute mtaacare --local --file=seed.sql",
-    "dev": "npx wrangler pages dev",
-    "db:init": "npx wrangler d1 execute mtaacare --remote --file=schema.sql",
-    "deploy": "npx wrangler pages deploy --branch main"
+
+    "deploy": "npm test && wrangler pages deploy --branch main",
+
+    "dev": "wrangler pages dev",
+    "dev:setup": "wrangler d1 execute mtaacare --local --file=schema.sql && wrangler d1 execute mtaacare --local --file=seed.sql",
+
+    "db:init": "wrangler d1 execute mtaacare --remote --file=schema.sql",
+    "db:backup": "wrangler d1 export mtaacare --remote --output=backup.sql",
+    "db:stats": "wrangler d1 execute mtaacare --remote --command=\"SELECT (SELECT COUNT(*) FROM helps) AS helps, (SELECT COUNT(*) FROM helps WHERE status='approved') AS approved, (SELECT COUNT(*) FROM requests) AS requests\"",
+
+    "login": "wrangler login",
+    "secret": "wrangler pages secret put ADMIN_TOKEN --project-name mtaacare",
+    "logs": "wrangler pages deployment tail --project-name mtaacare",
+    "deployments": "wrangler pages deployment list --project-name mtaacare"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
   }
 }

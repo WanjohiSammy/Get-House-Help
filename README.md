@@ -29,6 +29,7 @@ It's built to cost nothing to run while you test the idea: **Cloudflare Pages** 
 10. [Privacy and safety](#10-privacy-and-safety)
 11. [Running it day to day](#11-running-it-day-to-day)
 12. [Troubleshooting](#12-troubleshooting)
+13. [Commands](#13-commands)
 
 ---
 
@@ -111,7 +112,8 @@ Everything resets when you stop the server with Ctrl+C. Problems? See [Troublesh
 
 **1. Log in to Cloudflare from your terminal.** Inside `mtaacare-app`:
 ```bash
-npx wrangler login
+npm install          # once: installs Wrangler
+npm run login        # same as: npx wrangler login
 ```
 A browser opens. Approve, then come back to the terminal.
 
@@ -146,10 +148,11 @@ It prints your address, e.g. `https://mtaacare.pages.dev`. The script deploys wi
 
 **7. Set your staff password**, then deploy once more so it takes effect:
 ```bash
-npx wrangler pages secret put ADMIN_TOKEN     # paste a long random string, at least 12 characters
+node -e "console.log(crypto.randomUUID())"     # makes a strong password; copy it
+npm run secret                                  # paste it when asked
 npm run deploy
 ```
-Keep this password somewhere safe. To make a strong one, run `node -e "console.log(crypto.randomUUID())"`.
+Keep this password somewhere safe. You log in to `/staff` with it.
 
 **8. Check it works.**
 - [ ] Open your address on your phone. The home page loads.
@@ -302,7 +305,7 @@ Open `/staff` and log in with `ADMIN_TOKEN`.
 | New household request | Portal → **Requests** → **WhatsApp them** → **Share contacts** |
 | Request with no matches | Find and vet a help nearby → approve → **Find matches again** → **Share contacts** |
 | Someone was hired | **Requests** → choose her → **Mark hired**; set the help to "Hired / away" so she stops appearing |
-| Back up the database | `npx wrangler d1 export mtaacare --remote --output=backup-$(date +%F).sql` (weekly) |
+| Back up the database | `npm run db:backup` (weekly; writes `backup.sql`) |
 | Add an area | Add a line in `lib/areas.js` → `npm test` → `npm run deploy` |
 | Custom domain (e.g. mtaacare.co.ke) | Buy it from a Kenyan registrar → Cloudflare → your Pages project → Custom domains |
 
@@ -322,3 +325,22 @@ Cloudflare's free plan easily covers a pilot. Check current limits on Cloudflare
 | Household sees "We're still checking helps near…" | No approved help within 15 km does that work. Recruit and approve one nearby, then **Find matches again** |
 | Map is blank | It needs internet. If the rest works, the free tile server may be busy; try again or set `MAP_TILE_URL` |
 | Anything else | Copy the full error from the terminal or the browser console and send it over |
+
+## 13. Commands
+
+Run `npm install` once in the project folder (it installs Wrangler). Node.js 22.5 or newer is needed.
+
+| Command | What it does |
+| --- | --- |
+| `npm start` | Runs the whole site on your computer at http://localhost:8788 (demo data, resets on stop) |
+| `npm test` | Runs all the API checks |
+| `npm run deploy` | Tests, then puts the site live (always `--branch main`) |
+| `npm run db:init` | First time only: creates the tables in the live database |
+| `npm run db:stats` | Shows how many helps, approved helps and requests the live site has |
+| `npm run db:backup` | Downloads a full copy of the live database to `backup.sql` |
+| `npm run login` | Connects Wrangler to your Cloudflare account |
+| `npm run secret` | Sets or changes `ADMIN_TOKEN`, your staff portal password (run `npm run deploy` after) |
+| `node -e "console.log(crypto.randomUUID())"` | Makes a strong random password to use with `npm run secret` |
+| `npm run logs` | Shows live server logs, for finding errors |
+| `npm run deployments` | Lists recent deploys and which is live |
+| `npm run dev` / `npm run dev:setup` | Runs with Wrangler's own local server and a local D1 copy (needs `.dev.vars`) |
