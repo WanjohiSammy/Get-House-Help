@@ -37,7 +37,7 @@ It's built to cost nothing to run while you test the idea: **Cloudflare Pages** 
 ```
 Household                       You (staff portal)                House help
 ─────────                       ──────────────────                ──────────
-Fills one form:                                                   Joins at /join.html
+Fills one form:                                                   Joins at /join
 type, tasks, start, area,                                         (or you add her
 WhatsApp number                                                   from WhatsApp)
         │                                                                │
@@ -60,14 +60,16 @@ They call and interview ──► you mark who was hired ──► check in afte
 
 | Path | What it is |
 | --- | --- |
-| `public/index.html` | Home: live-in, live-out or day help |
-| `public/request.html` | The one-screen request (with "Use my location") |
-| `public/shortlist.html` | The household's private shortlist link |
-| `public/help.html` | One help's public profile: what was checked, travel time |
-| `public/pay.html` | Payment (only when `PAYMENT_MODE` isn't `free`) |
-| `public/join.html` | Sign-up for house helps, Kiswahili first |
-| `public/admin.html` | Staff portal: to vet, approved, map, requests, add a help |
-| `public/admin-help.html` | One help's vetting checklist, map pin, decision, history |
+| `public/index.html` → **/** | Home: live-in, live-out or day help |
+| `public/find.html` → **/find** | The one-screen request (with "Use my location") |
+| `public/matches.html` → **/m/&lt;id&gt;** | The household's private matches link, short enough for WhatsApp |
+| `public/helper.html` → **/helper/&lt;id&gt;** | One helper's public profile: what was checked, travel time |
+| `public/pay.html` → **/pay/&lt;id&gt;** | Payment (only when `PAYMENT_MODE` isn't `free`) |
+| `public/join` → **/join** | Sign-up for helpers, Kiswahili first |
+| `public/staff.html` → **/staff** | Staff portal: to vet, approved, map, requests, add a help |
+| `public/staff-helper.html` → **/staff/helper/&lt;id&gt;** | One helper's vetting checklist, map pin, decision, history |
+| `public/_redirects` | Makes the clean addresses above work on Cloudflare |
+| `public/favicon.svg` | The MtaaCare logo (pin, house and heart), also used as the browser tab icon |
 | `public/app.js`, `staff.js`, `styles.css` | Shared code and look |
 | `functions/api/…` | The API (Cloudflare Pages Functions), one file per address |
 | `lib/…` | Shared server code: matching, vetting rules, M-Pesa, areas |
@@ -86,7 +88,7 @@ They call and interview ──► you mark who was hired ──► check in afte
    npm start                      # same as: node tests/local-server.mjs
    ```
 3. Open the address it prints, usually **http://localhost:8788**.
-   - Staff portal: `/admin.html`. Admin token `test-admin-token-123`. Field agent token `test-agent-token-456` (Jane).
+   - Staff portal: `/staff`. Admin token `test-admin-token-123`. Field agent token `test-agent-token-456` (Jane).
    - Demo helps are loaded, including Ruth Atieno waiting to be vetted.
    - It starts in the free pilot mode. To try payments: `PAYMENT_MODE=manual npm start` (on Windows PowerShell: `$env:PAYMENT_MODE="manual"; npm start`).
 4. Run the checks with `npm test`. It should end with "All 46 checks passed".
@@ -151,7 +153,7 @@ Keep this password somewhere safe. To make a strong one, run `node -e "console.l
 
 **8. Check it works.**
 - [ ] Open your address on your phone. The home page loads.
-- [ ] `/admin.html`: log in with your password. "To vet" is empty.
+- [ ] `/staff`: log in with your password. "To vet" is empty.
 - [ ] **Add a help:** add yourself or a friend as a test help, record a passed ID check, and approve.
 - [ ] Back on the home page, make a request in that help's area with your own WhatsApp number. You should see her.
 - [ ] In the portal under **Requests**, press **Share contacts**. The household page now shows her number.
@@ -168,13 +170,24 @@ To deploy automatically on every push instead of running `npm run deploy`, go to
 
 Change files, run `npm test`, then `npm run deploy`. Database changes come with a file in `migrations/`. Run it once with `npx wrangler d1 execute mtaacare --remote --file=migrations/<file>.sql`.
 
+### Your addresses
+
+| Who | Address on your free Cloudflare site | With your own domain later |
+| --- | --- | --- |
+| Households | `mtaacare.pages.dev` | `mtaacare.co.ke` |
+| Helpers join | `mtaacare.pages.dev/join` | `mtaacare.co.ke/join` |
+| Staff portal | `mtaacare.pages.dev/staff` | `mtaacare.co.ke/staff` |
+| A household's matches | `mtaacare.pages.dev/m/k3x9…` | `mtaacare.co.ke/m/k3x9…` |
+
+`localhost:8788` is only your computer while testing. Nobody else ever sees it.
+
 ## 5. Your first month: launching with no data
 
 You don't need data to launch. You need **supply first, then demand, in one small area**.
 
 **Week 1: pick one cluster and recruit helps.**
 - Choose one area where helps live near families who hire, for example Kawangware/Kangemi next to Lavington/Kileleshwa/Westlands, or Kayole/Umoja next to Buruburu/Donholm.
-- Share `/join.html` in church groups, chamas and estate WhatsApp groups, and with caretakers. It's free for helps, always.
+- Share `/join` in church groups, chamas and estate WhatsApp groups, and with caretakers. It's free for helps, always.
 - Aim for 15–20 sign-ups.
 
 **Week 2: vet in person.**
@@ -241,7 +254,7 @@ In any mode, **Share contacts** also works for households who paid you another w
 
 ## 8. The vetting portal
 
-Open `/admin.html` and log in with `ADMIN_TOKEN`.
+Open `/staff` and log in with `ADMIN_TOKEN`.
 
 **Who can do what.** You can do everything. Field agents each get their own token in `STAFF_TOKENS`. They can add helps, record checks and pin locations, but only you can approve or reject, or see requests and payments. Every step records who did it and when.
 

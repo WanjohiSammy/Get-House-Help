@@ -1,0 +1,6 @@
+# Clean addresses (Cloudflare Pages). 200 = show that page without changing the address.
+# Pages already serves /find for find.html, /join for join.html, /staff for staff.html, and so on.
+/m/:id              /matches.html        200
+/helper/:id         /helper.html         200
+/pay/:id            /pay.html            200
+/staff/helper/:id   /staff-helper.html   200

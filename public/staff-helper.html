@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#2D2A7A">
+<meta name="theme-color" content="#5B34A6">
 <title>Vetting — MtaaCare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/styles.css">
 <style>
   .layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
@@ -15,10 +16,10 @@
   .col { display: flex; flex-direction: column; gap: 12px; }
   .step-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .state { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 12px; white-space: nowrap; }
-  .state.pass { background: #DDEFE3; color: #1E5B3A; }
+  .state.pass { background: #F1EBFB; color: #43247F; }
   .state.fail { background: #FDECEA; color: #B42318; }
-  .state.pending, .state.no_answer { background: var(--marigold-tint); color: var(--brown); }
-  .state.none { background: #EFEDE8; color: var(--muted); }
+  .state.pending, .state.no_answer { background: var(--sun-tint); color: var(--brown); }
+  .state.none { background: #F1EAF1; color: var(--muted); }
   details > summary { list-style: none; cursor: pointer; }
   details > summary::-webkit-details-marker { display: none; }
   .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
@@ -34,34 +35,34 @@
   .history li.pass { border-color: var(--green); } .history li.fail { border-color: var(--red); }
   .toggles { display: flex; flex-wrap: wrap; gap: 4px 14px; }
   .toggles label { display: flex; align-items: center; gap: 6px; font-size: 14px; min-height: 40px; }
-  .toggles input { width: 18px; height: 18px; accent-color: var(--indigo); }
-  .dots { display: flex; gap: 4px; } .dots i { width: 12px; height: 12px; border-radius: 6px; background: #E8E2D6; } .dots i.on { background: var(--green); }
+  .toggles input { width: 18px; height: 18px; accent-color: var(--brand); }
+  .dots { display: flex; gap: 4px; } .dots i { width: 12px; height: 12px; border-radius: 6px; background: #EEE2EA; } .dots i.on { background: var(--green); }
 </style>
 </head>
 <body>
 <script>
   // Opened by double-clicking the file? These pages need the local server.
   if (location.protocol === 'file:') document.addEventListener('DOMContentLoaded', function () {
-    document.body.innerHTML = '<main style="font-family:system-ui,sans-serif;max-width:520px;margin:40px auto;padding:0 20px;line-height:1.5;color:#1C1B2E">' +
+    document.body.innerHTML = '<main style="font-family:system-ui,sans-serif;max-width:520px;margin:40px auto;padding:0 20px;line-height:1.5;color:#24173A">' +
       '<h1 style="font-size:24px">Start the MtaaCare server first</h1>' +
       '<p>You opened this page as a file. It needs the app running. In a terminal, inside the <b>mtaacare-app</b> folder, run:</p>' +
-      '<pre style="background:#F1EBE0;padding:12px 14px;border-radius:10px;font-size:15px">node tests/local-server.mjs</pre>' +
+      '<pre style="background:#F7EFF3;padding:12px 14px;border-radius:10px;font-size:15px">node tests/local-server.mjs</pre>' +
       '<p>Then open <b>http://localhost:8788</b> in your browser.</p></main>';
   });
 </script>
 <main class="page wide">
   <div class="topbar" style="margin-left:0; justify-content:space-between">
-    <a class="row" href="/admin.html" style="gap:4px; font-weight:700"><span id="back"></span>All helps</a>
+    <a class="row" href="/staff" style="gap:4px; font-weight:700"><span id="back"></span>All helps</a>
     <span class="small" id="who"></span>
   </div>
   <div id="root"><div class="empty"><span class="spinner" style="margin:0 auto"></span></div></div>
 </main>
 <script type="module">
-  import { api, getConfig, esc, label, money, initials, avatarClass, icons, whatsappLink, getLocation, makeMap, pinIcon, googleMapsLink, CHECK_LABELS, param, $ } from '/app.js';
+  import { api, getConfig, esc, label, money, initials, avatarClass, icons, whatsappLink, getLocation, makeMap, pinIcon, googleMapsLink, CHECK_LABELS, param, pathParam, $ } from '/app.js';
   import { getToken, logout, staffApi, STATUS_PILL, RESULT_TEXT, STEP_CARDS, stepTitle, shortDate } from '/staff.js';
   $('#back').innerHTML = icons.back;
 
-  const id = param('id');
+  const id = pathParam('/staff/helper/') || param('id');
   let me, cfg, help, events = [];
   let mapState = null;
 
@@ -345,7 +346,7 @@
     render();
   } catch (e) {
     if (e.status === 401) logout();
-    $('#root').innerHTML = `<div class="card empty">${esc(e.message)}<p><a href="/admin.html">Back to all helps</a></p></div>`;
+    $('#root').innerHTML = `<div class="card empty">${esc(e.message)}<p><a href="/staff">Back to all helps</a></p></div>`;
   }
 </script>
 </body>

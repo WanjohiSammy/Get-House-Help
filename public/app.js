@@ -43,6 +43,11 @@ let configPromise;
 export const getConfig = () => (configPromise ||= api('/api/config'));
 
 export const param = name => new URLSearchParams(location.search).get(name);
+// The id at the end of a clean address, e.g. pathParam('/m/') on /m/abc123 → 'abc123'.
+export function pathParam(prefix) {
+  const p = location.pathname;
+  return p.startsWith(prefix) && p.length > prefix.length ? decodeURIComponent(p.slice(prefix.length).split('/')[0]) : null;
+}
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const money = n => 'KES ' + Number(n || 0).toLocaleString('en-KE');
 
@@ -72,13 +77,14 @@ export function rememberedRequests() {
 }
 
 export const icons = {
+  logo: '<svg aria-hidden="true" width="36" height="36" viewBox="0 0 48 48"><defs><linearGradient id="mtaa-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4B2A99"/><stop offset=".55" stop-color="#8A3DA6"/><stop offset="1" stop-color="#E8607A"/></linearGradient></defs><path d="M24 3C14.6 3 7 10.4 7 19.6 7 31.5 24 45 24 45s17-13.5 17-25.4C41 10.4 33.4 3 24 3z" fill="url(#mtaa-g)"/><path d="M15.5 21.5 24 14l8.5 7.5" fill="none" stroke="#FFF8F5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 20.5V29h12v-8.5" fill="none" stroke="#FFF8F5" stroke-width="3" stroke-linejoin="round"/><path d="M24 27.6c-1.9-1.4-3.2-2.5-3.2-3.8a1.7 1.7 0 0 1 3.2-.8 1.7 1.7 0 0 1 3.2.8c0 1.3-1.3 2.4-3.2 3.8z" fill="#FFC35C"/></svg>',
   back: '<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
   chevron: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
   pin: '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
   bag: '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
   shield: '<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
-  tick: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E7A4C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4.5 4.5L19 7"/></svg>',
-  dash: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A96A6" stroke-width="2.4" stroke-linecap="round"><path d="M7 12h10"/></svg>',
+  tick: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5B34A6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4.5 4.5L19 7"/></svg>',
+  dash: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A79DB3" stroke-width="2.4" stroke-linecap="round"><path d="M7 12h10"/></svg>',
   phone: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
   chat: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
   home: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>'
@@ -151,7 +157,7 @@ export async function makeMap(el, cfg, center, zoom = 14) {
 }
 
 // A pin drawn with CSS, so no marker images need to load.
-export const pinIcon = (L, color = '#2D2A7A') => L.divIcon({
+export const pinIcon = (L, color = '#5B34A6') => L.divIcon({
   className: '',
   html: `<span style="display:block;width:22px;height:22px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></span>`,
   iconSize: [22, 22], iconAnchor: [11, 22], popupAnchor: [0, -20]

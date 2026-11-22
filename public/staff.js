@@ -4,7 +4,7 @@ import { api } from '/app.js';
 const KEY = 'mtaacare.staff';
 export const getToken = () => { try { return localStorage.getItem(KEY) || ''; } catch { return ''; } };
 export const setToken = t => { try { localStorage.setItem(KEY, t); } catch {} };
-export const logout = () => { try { localStorage.removeItem(KEY); } catch {} location.href = '/admin.html'; };
+export const logout = () => { try { localStorage.removeItem(KEY); } catch {} location.href = '/staff'; };
 
 export function staffApi(path, opts = {}) {
   return api(path, { ...opts, token: getToken() }).catch(e => {

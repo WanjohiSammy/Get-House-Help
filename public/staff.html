@@ -4,40 +4,41 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#2D2A7A">
+<meta name="theme-color" content="#5B34A6">
 <title>Staff — MtaaCare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/styles.css">
 <style>
   .dots { display: flex; gap: 4px; }
-  .dots i { width: 10px; height: 10px; border-radius: 5px; background: #E8E2D6; }
+  .dots i { width: 10px; height: 10px; border-radius: 5px; background: #EEE2EA; }
   .dots i.on { background: var(--green); }
   .list-card { display: flex; flex-direction: column; gap: 8px; color: var(--ink); }
-  .list-card:hover { border-color: var(--indigo); color: var(--ink); }
+  .list-card:hover { border-color: var(--brand); color: var(--ink); }
   .meta { font-size: 12px; color: var(--muted); }
   #bigmap { height: 70vh; min-height: 420px; border-radius: var(--radius); border: 1px solid var(--line); }
   .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; margin: 10px 0; }
   .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 5px; margin-right: 6px; background: var(--c); }
   .toggles { display: flex; flex-wrap: wrap; gap: 4px 14px; }
   .toggles label { display: flex; align-items: center; gap: 6px; font-size: 14px; min-height: 40px; }
-  .toggles input { width: 18px; height: 18px; accent-color: var(--indigo); }
+  .toggles input { width: 18px; height: 18px; accent-color: var(--brand); }
 </style>
 </head>
 <body>
 <script>
   // Opened by double-clicking the file? These pages need the local server.
   if (location.protocol === 'file:') document.addEventListener('DOMContentLoaded', function () {
-    document.body.innerHTML = '<main style="font-family:system-ui,sans-serif;max-width:520px;margin:40px auto;padding:0 20px;line-height:1.5;color:#1C1B2E">' +
+    document.body.innerHTML = '<main style="font-family:system-ui,sans-serif;max-width:520px;margin:40px auto;padding:0 20px;line-height:1.5;color:#24173A">' +
       '<h1 style="font-size:24px">Start the MtaaCare server first</h1>' +
       '<p>You opened this page as a file. It needs the app running. In a terminal, inside the <b>mtaacare-app</b> folder, run:</p>' +
-      '<pre style="background:#F1EBE0;padding:12px 14px;border-radius:10px;font-size:15px">node tests/local-server.mjs</pre>' +
+      '<pre style="background:#F7EFF3;padding:12px 14px;border-radius:10px;font-size:15px">node tests/local-server.mjs</pre>' +
       '<p>Then open <b>http://localhost:8788</b> in your browser.</p></main>';
   });
 </script>
 <main class="page wide">
   <div class="topbar" style="margin-left:0; justify-content:space-between">
-    <a class="brand" href="/admin.html"><span class="brand-mark" id="mark"></span>MtaaCare staff</a>
+    <a class="brand" href="/staff"><span class="brand-mark" id="mark"></span><span>Mtaa<span class="brand-care">Care</span> <span style="font-weight:600; color:var(--muted)">staff</span></span></a>
     <span class="row" style="gap:6px"><span class="small" id="who"></span><button class="link-btn" id="logout" hidden>Log out</button></span>
   </div>
 
@@ -68,7 +69,7 @@
 <script type="module">
   import { api, getConfig, esc, label, money, icons, whatsappLink, makeMap, pinIcon, $ } from '/app.js';
   import { getToken, setToken, logout, staffApi, STATUS_PILL } from '/staff.js';
-  $('#mark').innerHTML = icons.home;
+  $('#mark').innerHTML = icons.logo;
   $('#logout').addEventListener('click', logout);
 
   let me, cfg, tab = 'pending', searchTimer;
@@ -103,7 +104,7 @@
     .map(k => `<i class="${h[k] ? 'on' : ''}"></i>`).join('')}</span>`;
 
   function listCard(h) {
-    return `<a class="card list-card" href="/admin-help.html?id=${encodeURIComponent(h.id)}">
+    return `<a class="card list-card" href="/staff/helper/${encodeURIComponent(h.id)}">
       <div class="row" style="justify-content:space-between; align-items:flex-start">
         <span><strong style="font-size:16px">${esc(h.name)}</strong><br><span class="small">${esc(h.area)} · ${esc(h.phone_display)}</span></span>
         <span class="${STATUS_PILL[h.status] || 'pill'}">${esc(h.status)}</span>
@@ -124,22 +125,22 @@
   }
 
   async function renderMap() {
-    $('#view').innerHTML = `<div class="legend"><span style="--c:#2D2A7A">Approved</span><span style="--c:#F4A62A">To vet</span><span style="--c:#9A96A6">Rejected / away</span></div>
+    $('#view').innerHTML = `<div class="legend"><span style="--c:#5B34A6">Approved</span><span style="--c:#FFC35C">To vet</span><span style="--c:#A79DB3">Rejected / away</span></div>
       <div id="bigmap" role="region" aria-label="Map of helps"></div>
       <p class="small">Pins without a saved location sit at the centre of their area. Households never see this map.</p>`;
     const { helps } = await staffApi('/api/admin/helps');
     const m = await makeMap($('#bigmap'), cfg, { lat: -1.2864, lng: 36.8172 }, 11);
     if (!m) { $('#bigmap').outerHTML = '<div class="card empty">The map could not load. Check your internet connection.</div>'; return; }
-    const colors = { approved: '#2D2A7A', pending: '#F4A62A' };
+    const colors = { approved: '#5B34A6', pending: '#FFC35C' };
     const points = [];
     for (const h of helps) {
       const area = cfg.areaPoints.find(a => a.name === h.area);
       const p = h.lat != null ? { lat: h.lat, lng: h.lng } : area;
       if (!p) continue;
       points.push([p.lat, p.lng]);
-      m.L.marker([p.lat, p.lng], { icon: pinIcon(m.L, colors[h.status] || '#9A96A6'), title: h.name })
+      m.L.marker([p.lat, p.lng], { icon: pinIcon(m.L, colors[h.status] || '#A79DB3'), title: h.name })
         .addTo(m.map)
-        .bindPopup(`<strong>${esc(h.name)}</strong><br>${esc(h.area)} · ${esc(h.status)}${h.lat == null ? ' (area centre)' : ''}<br><a href="/admin-help.html?id=${encodeURIComponent(h.id)}">Open</a>`);
+        .bindPopup(`<strong>${esc(h.name)}</strong><br>${esc(h.area)} · ${esc(h.status)}${h.lat == null ? ' (area centre)' : ''}<br><a href="/staff/helper/${encodeURIComponent(h.id)}">Open</a>`);
     }
     if (points.length > 1) m.map.fitBounds(points, { padding: [30, 30], maxZoom: 14 });
   }
@@ -159,17 +160,17 @@
           ${r.notes ? `<dt>Notes</dt><dd>${esc(r.notes)}</dd>` : ''}
           <dt>Phone</dt><dd>${tel(r.phone)}</dd>
           <dt>M-Pesa</dt><dd>${esc(r.mpesa_code || '—')} ${r.amount ? '· ' + money(r.amount) : ''}</dd>
-          <dt>Shortlist</dt><dd>${r.shortlist.map(id => `<a href="/admin-help.html?id=${encodeURIComponent(id)}">${esc(names.get(id) || id)}</a>`).join(', ') || '<b>none: find helps by hand</b>'}</dd>
+          <dt>Shortlist</dt><dd>${r.shortlist.map(id => `<a href="/staff/helper/${encodeURIComponent(id)}">${esc(names.get(id) || id)}</a>`).join(', ') || '<b>none: find helps by hand</b>'}</dd>
           ${r.hired_help_id ? `<dt>Hired</dt><dd>${esc(names.get(r.hired_help_id) || r.hired_help_id)}</dd>` : ''}
         </dl>
         <div class="row section" style="flex-wrap:wrap; gap:8px">
           ${r.status === 'pending_review' ? `<button class="btn small" data-act="confirm_payment">Confirm payment</button><button class="btn small ghost" data-act="reject_payment">Reject code</button>` : ''}
           ${['open', 'awaiting_payment'].includes(r.status) && r.shortlist.length ? `<button class="btn small" data-act="unlock">Share contacts</button>` : ''}
           ${['open', 'awaiting_payment', 'pending_review'].includes(r.status) ? `<button class="btn small ghost" data-act="refresh_shortlist">Find matches again</button>` : ''}
-          ${r.phone ? `<a class="btn small ghost" href="${whatsappLink(r.phone, `Habari! This is MtaaCare. Here are checked house helps near ${r.area} for you: ${location.origin}/shortlist.html?r=${r.id}`)}" target="_blank" rel="noopener">${icons.chat} WhatsApp them</a>` : ''}
+          ${r.phone ? `<a class="btn small ghost" href="${whatsappLink(r.phone, `Habari! This is MtaaCare. Here are checked house helps near ${r.area} for you: ${location.origin}/m/${r.id}`)}" target="_blank" rel="noopener">${icons.chat} WhatsApp them</a>` : ''}
           ${r.status === 'paid' && r.shortlist.length ? `<select class="input" style="width:auto; min-height:44px" aria-label="Who was hired">${r.shortlist.map(id => `<option value="${esc(id)}">${esc(names.get(id) || id)}</option>`).join('')}</select><button class="btn small ghost" data-act="mark_hired">Mark hired</button>` : ''}
           ${!['closed', 'hired'].includes(r.status) ? `<button class="link-btn" data-act="close">Close</button>` : ''}
-          <a class="link-btn" href="/shortlist.html?r=${encodeURIComponent(r.id)}" target="_blank" rel="noopener">Open shortlist</a>
+          <a class="link-btn" href="/m/${encodeURIComponent(r.id)}" target="_blank" rel="noopener">Open shortlist</a>
         </div>
       </div>`).join('')}</div>` : '<div class="card empty">No requests yet.</div>';
 
@@ -213,7 +214,7 @@
           name: f.fullname.value, phone: f.phone.value, area: f.area.value, kinds: all('kinds'), tasks: all('tasks'),
           years: f.years.value, salary: f.salary.value, languages: 'Kiswahili'
         } });
-        location.href = `/admin-help.html?id=${encodeURIComponent(id)}`;
+        location.href = `/staff/helper/${encodeURIComponent(id)}`;
       } catch (ex) { err.textContent = ex.message; err.hidden = false; }
     });
   }

@@ -36,6 +36,10 @@ const routes = [
   [/^\/api\/admin\/vetting$/, 'admin/vetting.js'],
   [/^\/api\/admin\/requests$/, 'admin/requests.js']
 ];
+const REWRITES = readFileSync(join(PUBLIC, '_redirects'), 'utf8').split('\n')
+  .map(l => l.trim()).filter(l => l && !l.startsWith('#'))
+  .map(l => l.split(/\s+/)).filter(p => p[2] === '200')
+  .map(([from, to]) => ({ re: new RegExp('^' + from.replace(/:[a-z]+/g, '[^/]+') + '/?$'), to }));
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
 const SKIP_HEADERS = new Set(['host', 'connection', 'content-length', 'transfer-encoding', 'keep-alive', 'upgrade', 'expect']);
 
@@ -57,8 +61,17 @@ const server = http.createServer(async (req, res) => {
       res.end(Buffer.from(await out.arrayBuffer()));
       return;
     }
-    // Static files, never outside /public
+    // Static files, never outside /public, with the same address rules as Cloudflare Pages:
+    // /find serves find.html, /find.html redirects to /find, and _redirects 200 rules rewrite /m/:id etc.
+    if (url.pathname.endsWith('.html') && existsSync(join(PUBLIC, decodeURIComponent(url.pathname)))) {
+      const clean = url.pathname === '/index.html' ? '/' : url.pathname.slice(0, -5);
+      res.writeHead(308, { location: clean + url.search }).end();
+      return;
+    }
     let path = normalize(join(PUBLIC, decodeURIComponent(url.pathname)));
+    const rewrite = REWRITES.find(r => r.re.test(url.pathname));
+    if (rewrite) path = join(PUBLIC, rewrite.to);
+    else if (!extname(path) && existsSync(path + '.html')) path += '.html';
     if (!path.startsWith(PUBLIC)) { res.writeHead(403).end(); return; }
     if (existsSync(path) && statSync(path).isDirectory()) path = join(path, 'index.html');
     if (!existsSync(path)) { res.writeHead(404, { 'content-type': 'text/plain' }).end('Not found'); return; }
@@ -80,8 +93,8 @@ server.on('listening', () => {
   const base = `http://localhost:${port}`;
   console.log(`\n  MtaaCare is running.\n`);
   console.log(`  Households:  ${base}/`);
-  console.log(`  Helps join:  ${base}/join.html`);
-  console.log(`  Staff:       ${base}/admin.html`);
+  console.log(`  Helpers:     ${base}/join`);
+  console.log(`  Staff:       ${base}/staff`);
   console.log(`               admin token        test-admin-token-123`);
   console.log(`               field agent token  test-agent-token-456  (Jane)\n`);
   console.log(`  Payment mode: ${env.PAYMENT_MODE}. Demo data resets when you stop the server (Ctrl+C).\n`);
