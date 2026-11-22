@@ -162,3 +162,98 @@ export const pinIcon = (L, color = '#5B34A6') => L.divIcon({
   html: `<span style="display:block;width:22px;height:22px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></span>`,
   iconSize: [22, 22], iconAnchor: [11, 22], popupAnchor: [0, -20]
 });
+
+// ---------- Place search: type a few letters, pick from the list ----------
+
+const fold = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/['’]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+export const placeLabel = a => a ? `${a.name}${a.town && a.town !== a.name ? ', ' + a.town : ''}` : '';
+
+// Turns a text input into a searchable place picker. `places` = cfg.areaPoints.
+// Returns { value, set(name), clear() }; value is the chosen place name, or '' if none.
+export function placePicker(input, places, { onPick, popular = [] } = {}) {
+  const wrap = input.parentElement;
+  wrap.style.position = 'relative';
+  const list = document.createElement('ul');
+  list.className = 'combo-list';
+  list.id = `${input.id}-list`;
+  list.setAttribute('role', 'listbox');
+  list.hidden = true;
+  wrap.appendChild(list);
+  Object.assign(input, { autocomplete: 'off', spellcheck: false });
+  input.setAttribute('role', 'combobox');
+  input.setAttribute('aria-autocomplete', 'list');
+  input.setAttribute('aria-controls', list.id);
+  input.setAttribute('aria-expanded', 'false');
+
+  const indexed = places.map(a => ({ a, keys: [a.name, ...(a.aka || [])].map(fold), town: fold(a.town) }));
+  let chosen = null, shown = [], active = -1;
+
+  function search(q) {
+    const f = fold(q);
+    if (!f) return (popular.length ? popular.map(n => places.find(a => a.name === n)).filter(Boolean) : places).slice(0, 8);
+    const scored = [];
+    for (const { a, keys, town } of indexed) {
+      let score = 0;
+      for (const k of keys) {
+        if (k === f) score = Math.max(score, 100);
+        else if (k.startsWith(f)) score = Math.max(score, 80);
+        else if (k.split(' ').some(w => w.startsWith(f))) score = Math.max(score, 60);
+        else if (k.includes(f)) score = Math.max(score, 40);
+      }
+      if (!score && town.startsWith(f)) score = 30;
+      if (score) scored.push({ a, score });
+    }
+    return scored.sort((x, y) => y.score - x.score || x.a.name.localeCompare(y.a.name)).slice(0, 8).map(x => x.a);
+  }
+  function open(items) {
+    shown = items;
+    active = items.length ? 0 : -1;
+    list.innerHTML = items.length
+      ? items.map((a, i) => `<li role="option" id="${list.id}-${i}" aria-selected="${i === active}" data-i="${i}"><span>${esc(a.name)}</span><span class="combo-town">${esc(a.town)}</span></li>`).join('')
+      : `<li class="combo-empty">No match. Try a nearby estate or town, or use your location.</li>`;
+    list.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    input.setAttribute('aria-activedescendant', active >= 0 ? `${list.id}-${active}` : '');
+  }
+  function close() { list.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); }
+  function move(d) {
+    if (!shown.length) return;
+    active = (active + d + shown.length) % shown.length;
+    list.querySelectorAll('[role=option]').forEach((li, i) => li.setAttribute('aria-selected', String(i === active)));
+    input.setAttribute('aria-activedescendant', `${list.id}-${active}`);
+    list.querySelector(`[data-i="${active}"]`)?.scrollIntoView({ block: 'nearest' });
+  }
+  function pick(a) {
+    chosen = a;
+    input.value = placeLabel(a);
+    input.classList.add('picked');
+    close();
+    onPick?.(a);
+  }
+  input.addEventListener('focus', () => { if (!chosen) open(search(input.value)); else input.select(); });
+  input.addEventListener('input', () => { chosen = null; input.classList.remove('picked'); open(search(input.value)); });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); list.hidden ? open(search(input.value)) : move(1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+    else if (e.key === 'Enter' && !list.hidden && active >= 0) { e.preventDefault(); pick(shown[active]); }
+    else if (e.key === 'Escape') close();
+  });
+  list.addEventListener('mousedown', e => {
+    const li = e.target.closest('[data-i]');
+    if (li) { e.preventDefault(); pick(shown[Number(li.dataset.i)]); }
+  });
+  input.addEventListener('blur', () => setTimeout(() => {
+    close();
+    if (!chosen && input.value.trim()) {
+      const exact = search(input.value)[0];
+      if (exact && fold(placeLabel(exact)).startsWith(fold(input.value))) pick(exact);
+    }
+  }, 120));
+
+  return {
+    get value() { return chosen ? chosen.name : ''; },
+    set(name) { const a = places.find(p => p.name === name); if (a) pick(a); },
+    clear() { chosen = null; input.value = ''; input.classList.remove('picked'); }
+  };
+}

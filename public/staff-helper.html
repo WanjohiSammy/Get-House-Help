@@ -171,7 +171,7 @@
         <div class="fields">
           <label class="small wide">Full name<input class="input" name="fullname" value="${esc(help.name)}"></label>
           <label class="small">Phone<input class="input" name="phone" type="tel" value="${esc(localPhone(help.phone))}"></label>
-          <label class="small">Area<select class="input" name="area">${cfg.areas.map(a => `<option ${a === help.area ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select></label>
+          <label class="small">Area<select class="input" name="area">${cfg.areaPoints.map(a => `<option value="${esc(a.name)}" ${a.name === help.area ? 'selected' : ''}>${esc(a.name)} · ${esc(a.town)}</option>`).join('')}</select></label>
         </div>
         <p class="kicker section" style="margin-bottom:4px">Type of work</p><div class="toggles">${checks('kinds', cfg.kinds, kinds)}</div>
         <p class="kicker" style="margin:10px 0 4px">Can do</p><div class="toggles">${checks('tasks', cfg.tasks, tasks)}</div>

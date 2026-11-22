@@ -65,7 +65,7 @@ They call and interview ──► you mark who was hired ──► check in afte
 | `public/matches.html` → **/m/&lt;id&gt;** | The household's private matches link, short enough for WhatsApp |
 | `public/helper.html` → **/helper/&lt;id&gt;** | One helper's public profile: what was checked, travel time |
 | `public/pay.html` → **/pay/&lt;id&gt;** | Payment (only when `PAYMENT_MODE` isn't `free`) |
-| `public/join` → **/join** | Sign-up for helpers, Kiswahili first |
+| `public/join.html` → **/join** | Sign-up for helpers in 3 short steps (about you, your work, past employers), Kiswahili first, with a languages dropdown (Kiswahili, English, French, German, Kenyan languages, and Other to type) |
 | `public/staff.html` → **/staff** | Staff portal: to vet, approved, map, requests, add a help |
 | `public/staff-helper.html` → **/staff/helper/&lt;id&gt;** | One helper's vetting checklist, map pin, decision, history |
 | `public/_redirects` | Makes the clean addresses above work on Cloudflare |
@@ -281,7 +281,7 @@ Open `/staff` and log in with `ADMIN_TOKEN`.
 - **How matches are chosen:** approved helps who do the requested type of work and live within `MAX_DISTANCE_KM` (15 km) of the household. They're ranked by distance first, then by how many requested tasks they do, then by how many checks they've passed. Each household sees at most 3.
 - **Where people live:** the centre of their area by default. A household or help can tap **Use my location**, and staff can drag a help's pin on her page. Pins are rounded to about 100 m.
 - **Travel time** shown to households is a rough matatu estimate: about 4 minutes per km plus 10 minutes waiting.
-- **Areas:** the list is in `lib/areas.js`, with approximate centre points. Add estates as you grow, and check the points of the ones you serve first.
+- **Places:** about 130 places people know, in `lib/areas.js`. That's most Nairobi estates, the commuter towns (Ruaka, Ruiru, Syokimau, Kitengela, Rongai…) and the main towns elsewhere (Mombasa, Kisumu, Nakuru, Eldoret and their estates, and more). Each has its town and other spellings people type, e.g. "Ongata Rongai", "Buru Buru", "Yaya". People find their place by **typing a few letters** on the find, join and staff pages. The map points are approximate, so check the ones you serve first. To add a place, add one line `['Name', 'Town', lat, lng, 'other spelling|another']`, then run `npm test` and `npm run deploy`.
 - **Maps** use [Leaflet](https://leafletjs.com) and free [OpenStreetMap](https://www.openstreetmap.org) tiles: no key, no card. The public tile servers are meant for light use, which suits staff pages. If traffic grows, switch provider with `MAP_TILE_URL`. "Open in Google Maps" links are always free.
 
 ## 10. Privacy and safety

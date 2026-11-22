@@ -67,7 +67,7 @@
   </div>
 </main>
 <script type="module">
-  import { api, getConfig, esc, label, money, icons, whatsappLink, makeMap, pinIcon, $ } from '/app.js';
+  import { api, getConfig, esc, label, money, icons, whatsappLink, makeMap, pinIcon, placePicker, $ } from '/app.js';
   import { getToken, setToken, logout, staffApi, STATUS_PILL } from '/staff.js';
   $('#mark').innerHTML = icons.logo;
   $('#logout').addEventListener('click', logout);
@@ -194,7 +194,7 @@
       <p class="small" style="margin-top:0">For helps you met in person or on WhatsApp. You can record the checks on the next screen.</p>
       <div class="field"><label class="label" for="a-name" style="margin:0">Full name</label><input class="input" id="a-name" name="fullname" autocomplete="off" required></div>
       <div class="field"><label class="label" for="a-phone" style="margin:0">Phone</label><input class="input" id="a-phone" name="phone" type="tel" required></div>
-      <div class="field"><label class="label" for="a-area" style="margin:0">Area</label><select class="input" id="a-area" name="area">${cfg.areas.map(a => `<option>${esc(a)}</option>`).join('')}</select></div>
+      <div class="field"><label class="label" for="a-area" style="margin:0">Where she lives</label><input class="input search-input" id="a-area" type="text" placeholder="Start typing an estate or town"></div>
       <p class="kicker section" style="margin-bottom:4px">Type of work</p><div class="toggles">${checks('kinds', cfg.kinds)}</div>
       <p class="kicker section" style="margin-bottom:4px">Can do</p><div class="toggles">${checks('tasks', cfg.tasks)}</div>
       <div class="grid2" style="grid-template-columns:repeat(2,1fr); gap:8px; margin-top:8px">
@@ -204,6 +204,7 @@
       <p class="error-text" hidden></p>
       <button class="btn section" type="submit">Add and start vetting</button>
     </form>`;
+    const areaPick = placePicker($('#a-area'), cfg.areaPoints);
     $('#add').addEventListener('submit', async e => {
       e.preventDefault();
       const f = e.target, err = f.querySelector('.error-text');
@@ -211,7 +212,7 @@
       err.hidden = true;
       try {
         const { id } = await staffApi('/api/admin/helps', { method: 'POST', body: {
-          name: f.fullname.value, phone: f.phone.value, area: f.area.value, kinds: all('kinds'), tasks: all('tasks'),
+          name: f.fullname.value, phone: f.phone.value, area: areaPick.value, kinds: all('kinds'), tasks: all('tasks'),
           years: f.years.value, salary: f.salary.value, languages: 'Kiswahili'
         } });
         location.href = `/staff/helper/${encodeURIComponent(id)}`;
